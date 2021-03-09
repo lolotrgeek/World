@@ -34,7 +34,9 @@ wsServer.on("connection", (ws, req) => {
             // log('Data: '+ data)
             if (data === "CLIENT") {
                 addClient(ws)
-                sendToClient(`Hello! ${Date.now()}`)
+                setInterval(() => {
+                    sendToClient(`Hello! ${Date.now()}`)
+                }, 1000)
 
             }
         }
@@ -74,5 +76,6 @@ function sendToClient(data) {
 app.use(express.static("."))
 app.get("/", (req, res) => res.sendFile(path.resolve(__dirname, "./client/client.html")))
 app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sockets.js")))
+app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sketch.js")))
 
 app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))
