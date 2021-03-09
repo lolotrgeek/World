@@ -76,6 +76,10 @@ function sendToClient(data) {
 app.use(express.static("."))
 app.get("/", (req, res) => res.sendFile(path.resolve(__dirname, "./client/client.html")))
 app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sockets.js")))
+app.get("/functions.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/functions.js")))
+app.get("/bloop.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/bloop.js")))
+app.get("/dna.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/dna.js")))
+app.get("/food.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/food.js")))
+app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/world.js")))
 app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sketch.js")))
-
 app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))

@@ -22,21 +22,21 @@ function setup() {
   textSize(20)
   // World starts with 20 creatures
   // and 20 pieces of food
-  // world = new World(population)
+  world = new World(population)
 }
 
 function draw() {
   background(175)
   text(`Message: ${msg}` , 10, 30)
 
-  // world.run()
+  world.run()
 }
 
 // We can add a creature manually if we so desire
-// function mousePressed() {
-//   world.born(mouseX, mouseY)
-// }
+function mousePressed() {
+  world.born(mouseX, mouseY)
+}
 
-// function mouseDragged() {
-//   world.born(mouseX, mouseY)
-// }
+function mouseDragged() {
+  world.born(mouseX, mouseY)
+}
