@@ -7,10 +7,10 @@
 // Creature class
 // Create a "bloop" creature
 class Bloop {
-  constructor(l, dna_) {
+  constructor(l, dna_, health) {
     this.actions = new Actions(this)
     this.position = l.copy() // Location
-    this.health = 200 // Life timer
+    this.health = health // Life timer
     this.xoff = random(1000)
     this.yoff = random(1000)
     this.dna = dna_ // DNA
@@ -28,6 +28,8 @@ class Bloop {
     this.update()
   }
 
+  // TODO: every bloop needs it's own process/address
+
   inside(thingLocation) {
     let distance = p5.Vector.dist(this.position, thingLocation)
     if (distance < this.skin) return true
@@ -36,6 +38,7 @@ class Bloop {
 
   observe(bloops, foods) {
     this.observations.push({ bloops, foods })
+    // TODO: send to Agent...
   }
 
   update() {

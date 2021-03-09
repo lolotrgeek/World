@@ -7,17 +7,15 @@
 // A collection of food in the world
 
 class Food {
-  constructor(num) {
-    // Start with some food
-    this.food = []
-    for (let i = 0; i < num; i++) {
-      this.food.push(createVector(random(width), random(height)))
-    }
+  constructor(energy) {
+    this.energy = energy
   }
 
   // Add some food at a location
   add(l) {
-    this.food.push(l.copy())
+    let location = l.copy()
+    let energy = this.energy
+    this.food.push({location, energy})
   }
 
   // Add some food at a location

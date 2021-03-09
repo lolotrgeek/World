@@ -5,12 +5,13 @@ let msg
 
 ws.onopen = () => {
     console.log(`Connected to ${WS_URL}`)
-    ws.send("CLIENT")
+    ws.send("WORLD")
 }
 
 ws.onmessage = async (message) => {
     if (typeof message.data === 'string') {
         // console.log(message.data)
-        msg = message.data
+        msg = JSON.parse(message.data)
     }
+
 }

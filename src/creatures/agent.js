@@ -1,6 +1,16 @@
 
 // consumes a state and chooses an action from a given action space
 // this is a hardcoded agent, will later be replaced with a neural network.
+const WebSocket = require("ws")
+
+const WS_URL = 'ws:///localhost:8888'
+const ws = new WebSocket(WS_URL)
+
+ws.on('message', function (message) {
+  if(typeof message === 'string') {
+    
+  }
+})
 
 class Agent {
     constructor(actions) {
@@ -32,6 +42,14 @@ class Agent {
     }
 
     spin() {
-        
+      // connect to server, get a list of worlds, connect to a world...
+      
+      // spawn a creature
+
+      // load the creature's action space
+
+      // load model
+
+      // local creature's observations, take actions, receive reward...
     }
 }

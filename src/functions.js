@@ -14,3 +14,13 @@ Object.defineProperty(Array.prototype, 'forEachRev', {
 Array.max = function (array) {
   return Math.max.apply(Math, array)
 };
+
+function randint(min, max) {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  return Math.floor(Math.random() * (max - min) + min)
+}
+
+module.exports = {
+  randint :randint
+}
