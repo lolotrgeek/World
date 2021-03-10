@@ -11,29 +11,23 @@
 
 let world
 
-fuzz = 0.4 // attractiveness threshold
-odds = 0.01 // chances of reproduction
-energy = 1000
-
 function setup() {
   cnv = createCanvas(windowWidth, windowHeight)
   cnv.style('display', 'block')
   textSize(20)
   // World starts with 20 creatures
   // and 20 pieces of food
-  world = new World(energy)
+  world = new World()
 }
 
 function draw() {
   background(175)
-  // text(`Message: ${msg}` , 10, 30)
-
-  if (typeof msg === 'object') {
-    world.spin()
-
+  // text(`Message: ${msg.toString()}` , 10, 30)
+  if (Array.isArray(msg)) {
+    world.bloops = msg
+    world.bloops.forEach(bloop => bloop = world.visualize(bloop))
   }
-
-
+  world.spin()
 }
 
 // We can add a creature manually if we so desire

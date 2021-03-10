@@ -7,18 +7,14 @@
 // Creature class
 // Create a "bloop" creature
 class Bloop {
-  constructor(l, dna_, health) {
-    this.actions = new Actions(this)
-    this.position = l.copy() // Location
+  constructor(dna_, health) {
+    this.address = null
+    this.actions = []
+    this.position = null // Location, gets from environment observations
     this.health = health // Life timer
-    this.xoff = random(1000)
-    this.yoff = random(1000)
     this.dna = dna_ // DNA
-    this.maxspeed = map(this.dna.genes[0], 0, 1, 15, 0) // The bigger the bloop, the slower it is
-    this.radius = map(this.dna.genes[0], 0, 1, 0, 50)
-    this.observation_limit = this.radius * 3
-    this.skin = this.radius / 2
-    this.attractions = [random(0, 1)] // trait(s) this agent is attracted to
+    this.attractions = [Math.random()] // trait(s) this agent is attracted to
+    this.phenotype = { r: 0, g: 0, b: Math.round(this.attractions[0] * 100) }
     this.mate = null
     this.ate = null // index of food eaten
     this.observations = []
@@ -30,12 +26,6 @@ class Bloop {
 
   // TODO: every bloop needs it's own process/address
 
-  inside(thingLocation) {
-    let distance = p5.Vector.dist(this.position, thingLocation)
-    if (distance < this.skin) return true
-    else return false
-  }
-
   observe(bloops, foods) {
     this.observations.push({ bloops, foods })
     // TODO: send to Agent...
@@ -43,7 +33,7 @@ class Bloop {
 
   update() {
     if (this.observations.length > 0) {
-      
+
       // let movement
       // this.position.add(movement)
     }
@@ -57,41 +47,21 @@ class Bloop {
     this.mate = null
   }
 
-  phenotype() {
-    let r = 0
-    let g = 0
-    let b = Math.round(this.attractions[0] * 100)
-    return { r, g, b }
-  }
-
-  dead() {
-    if (this.health < 0.0) {
-      return true
-    } else {
-      return false
-    }
-  }
-}
-
-class Actions {
-  constructor(creature) {
-    this.creature = creature 
-  }
 
   move(x, y) {
-    this.creature.position.x = this.creature.position.x + x
-    this.creature.position.y = this.creature.position.y + y
+    this.position.x = this.position.x + x
+    this.position.y = this.position.y + y
   }
 
   eat(food) {
-    this.creature.health += 100
+    this.health += 100
     return food
   }
 
   select(nearby) {
     // select a mate by attractiveness
     let potentials = nearby.filter(bloop => {
-      let attraction = Math.abs(this.creature.attractions[0] - bloop.dna.genes[0])
+      let attraction = Math.abs(this.attractions[0] - bloop.dna.genes[0])
       // ignore any others that are not attractive...
       let attracted = a => a > fuzz ? true : false
       if (attracted(attraction)) return true
@@ -111,19 +81,26 @@ class Actions {
 
   reproduce(mate) {
     // local sexual reproduction
-    let genes = this.creature.dna.genes.concat(mate.dna.genes)
-    let childDNA = this.creature.dna.crossover(genes)
-    // console.log('Reproducing!', childDNA)
+    let genes = this.dna.genes.concat(mate.dna.genes)
+    let childDNA = this.dna.crossover(genes)
     return childDNA
   }
 
   a_reproduce() {
     // asexual reproduction
     if (random(1) < 0.0005) {
-      // Child is exact copy of single parent
-      let childDNA = this.creature.dna.copy()
-      // Child DNA can mutate
+      let childDNA = this.dna.copy()
       return childDNA
     } else return null
   }
+  dead() {
+    if (this.health < 0.0) {
+      return true
+    } else {
+      return false
+    }
+  }
 }
+
+
+module.exports = { Bloop }

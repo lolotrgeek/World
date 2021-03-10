@@ -5,8 +5,7 @@
 // Evolution EcoSystem
 
 class World {
-  constructor(energy) {
-    this.energy = energy
+  constructor() {
     this.food = []
     this.bloops = []
   }
@@ -37,7 +36,7 @@ class World {
   display(bloop) {
     ellipseMode(CENTER)
     stroke(0, bloop.health)
-    let color = bloop.phenotype()
+    let color = bloop.phenotype
     fill(color.r, color.g, color.b, bloop.health)
     ellipse(bloop.position.x, bloop.position.y, bloop.radius, bloop.radius)
   }
@@ -68,30 +67,54 @@ class World {
     else return false
   }
 
+  visualize(b) {
+    if (!b.position) {
+      b.position = createVector(random(width), random(height))
+    } else {
+      b.position = createVector(b.position.x, b.position.y)
+    }
+    if (!b.maxspeed) {
+      b.maxspeed = map(b.dna.genes[0], 0, 1, 15, 0) // The bigger the bloop, the slower it is
+    }
+    if (!b.radius) {
+      b.radius = map(b.dna.genes[0], 0, 1, 0, 50)
+    }
+    if (!b.observation_limit) {
+      b.observation_limit = b.radius * 3
+    }
+    return b
+  }
+
   spin() {
     this.bloops.forEachRev((b, i) => {
-      b.spin()
-      
       // Show the bloop.
+
       this.wraparound(b.position, b.radius)
       this.display(b)
 
       let foods = []
 
       // see what is near each agent
+
       let nearby = this.nearby(b, foods)
 
       // pass the bloop an observation
-      b.observe(nearby.bloops, nearby.foods) // TODO: send back over websocket (or is this all in node world?)
+      // TODO: send back over websocket (or is this all in node world?)
 
       // show nearby bloops
       nearby.bloops.map(near => this.showdistance(b.position, near.position, b.attractions))
 
-      if (b.dead()) {
-        this.bloops.splice(i, 1)
-        // this.food.add(b.position)
-      }
-      b.reset()
+      b.nearby = nearby
+
+      // un-vectorize
+      b.position = { x: b.position.x, y: b.position.y }
+
+      console.log(JSON.stringify(b))
+      // ws.send(JSON.stringify(b))
+
+
+      // console.log(msg)
+
     })
   }
 }

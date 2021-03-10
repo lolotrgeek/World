@@ -10,8 +10,7 @@ ws.onopen = () => {
 
 ws.onmessage = async (message) => {
     if (typeof message.data === 'string') {
-        // console.log(message.data)
         msg = JSON.parse(message.data)
+        // console.log(msg)
     }
-
 }

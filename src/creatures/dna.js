@@ -15,7 +15,7 @@ class DNA {
       // DNA determines size and speed
       this.genes = new Array(1);
       for (let i = 0; i < this.genes.length; i++) {
-        this.genes[i] = random(0, 1)
+        this.genes[i] = Math.random()
       }
     }
   }
@@ -30,17 +30,18 @@ class DNA {
     return new DNA(newgenes)
   }
 
-  crossover(genes){
+  crossover(genes) {
     let choice = [genes[Math.floor(Math.random() * genes.length)]]
     return new DNA(choice)
   }
 
   // Based on a mutation probability, picks a new random character in array spots
   mutate(m) {
-    for (let i = 0; i < this.genes.length; i++) {
-      if (random(1) < m) {
-        this.genes[i] = random(0, 1)
+    this.genes.forEach((gene, i) => {
+      if (Math.random() < m) {
+        this.genes[i] = Math.random()
       }
-    }
+    })
   }
 }
+module.exports = { DNA }
