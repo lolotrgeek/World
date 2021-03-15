@@ -29,11 +29,30 @@ class World {
     return choice
   }
 
+  manifest(b) {
+    if (!b.position) {
+      b.position = {x : random(this.ports.length), y: random(this.ports.length)}
+    }
+    if (!b.maxspeed) {
+      b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
+    }
+    if (!b.radius) {
+      b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
+    }
+    if (!b.observation_limit) {
+      b.observation_limit = b.radius * 3
+    }
+    if(!b.address) {
+      b.address = "ws://localhost:" + this.port()
+    }
+    return b
+  }
+
   spawn(health) {
     console.log('Spawning:', health)
     let dna = new DNA()
     let bloop = new Bloop(dna, health)
-    bloop.address = "ws://localhost:" + this.port()
+    bloop = this.manifest(bloop)
     this.bloops.push(bloop)
   }
 
@@ -91,7 +110,7 @@ class World {
     this.update()
     listen(msg => {
       if(msg === "WORLD") {
-        console.log(JSON.stringify({world: this}))
+        // console.log(JSON.stringify({world: this}))
         return JSON.stringify({world: this})
       }
       else if (Array.isArray(msg) && msg.length > 0) {
@@ -105,8 +124,8 @@ class World {
           return bloop
         })
       }
+      setInterval(() => this.update(), 50)
       // console.log(bloops)
-      this.update()
     })
   }
 }
