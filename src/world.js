@@ -11,9 +11,9 @@ const { run, listen, broadcast } = require('./server')
 class World {
   constructor(energy) {
     this.energy = energy
-    this.food = []
     this.bloops = []
     this.ports = []
+
     // generate unique ports
     while (this.ports.length < 1000) {
       let port = randint(10000, 20000)
@@ -51,8 +51,6 @@ class World {
       let health = this.distribute(this.energy)
       this.spawn(health)
       this.conserve(health)
-
-      // TODO: add food randomly
     }
   }
 
@@ -62,10 +60,10 @@ class World {
       b.spin()
 
       // pass the bloop an observation
-      // b.observe(nearby.bloops, nearby.foods)
+      // b.observe(nearby)
 
       if (b.ate != null) {
-        // this.food.remove(b.ate)
+        // this.energy.remove(b.ate)
       }
 
       // has bloop selected a mate?
@@ -81,7 +79,6 @@ class World {
       if (b.dead()) {
         this.bloops.splice(i, 1)
         this.ports.push(b.address)
-        // this.food.add(b.position)
       }
       // log(b)
       b.reset()
@@ -92,9 +89,13 @@ class World {
   spin() {
     run()
     this.update()
-    listen(bloops => {
-      if (Array.isArray(bloops) && bloops.length > 0) {
-        this.bloops = bloops.map(heard => {
+    listen(msg => {
+      if(msg === "WORLD") {
+        console.log(JSON.stringify({world: this}))
+        return JSON.stringify({world: this})
+      }
+      else if (Array.isArray(msg) && msg.length > 0) {
+        this.bloops = msg.map(heard => {
           let bloop = new Bloop(heard.dna, heard.health)
           bloop.actions = heard.actions
           bloop.position = heard.position
