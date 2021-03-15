@@ -5,40 +5,42 @@
 // Evolution EcoSystem
 
 class World {
-  constructor() {
-    this.food = []
-    this.bloops = []
+  constructor({bloops, energy, ports }) {
+    this.food = energy
+    this.bloops = bloops
+    this.size = {x: ports.length, y: ports.length} // network space to visual space
+    this.p = null
   }
 
   showdistance(position, objective, attractions) {
     // Draw distance
-    push()
-    fill(0)
-    line(position.x, position.y, objective.x, objective.y)
-    translate((position.x + objective.x) / 2, (position.y + objective.y) / 2)
-    rotate(atan2(objective.y - position.y, objective.x - position.x))
+    this.p.push()
+    this.p.fill(0)
+    this.p.line(position.x, position.y, objective.x, objective.y)
+    this.p.translate((position.x + objective.x) / 2, (position.y + objective.y) / 2)
+    this.p.rotate(p.atan2(objective.y - position.y, objective.x - position.x))
 
     if (attractions > fuzz) {
-      fill('#fff')
-      text(nfc(attractions, 1), 0, -5)
+      this.p.fill('#fff')
+      this.p.text(nfc(attractions, 1), 0, -5)
     }
-    pop()
+    this.p.pop()
   }
 
   wraparound(position, r) {
     // cause bloops to wrap around the envrironment
-    if (position.x < -r) position.x = width + r
-    if (position.y < -r) position.y = height + r
-    if (position.x > width + r) position.x = -r
-    if (position.y > height + r) position.y = -r
+    if (position.x < -r) position.x = this.p.width + r
+    if (position.y < -r) position.y = this.p.height + r
+    if (position.x > this.p.width + r) position.x = -r
+    if (position.y > this.p.height + r) position.y = -r
   }
 
   display(bloop) {
-    ellipseMode(CENTER)
-    stroke(0, bloop.health)
+    this.p.ellipseMode(this.p.CENTER)
+    this.p.stroke(0, bloop.health)
     let color = bloop.phenotype
-    fill(color.r, color.g, color.b, bloop.health)
-    ellipse(bloop.position.x, bloop.position.y, bloop.radius, bloop.radius)
+    this.p.fill(color.r, color.g, color.b, bloop.health)
+    this.p.ellipse(bloop.position.x, bloop.position.y, bloop.radius, bloop.radius)
   }
 
   nearby(bloop, food) {
@@ -69,13 +71,13 @@ class World {
 
   manifest(b) {
     if (!b.position) {
-      b.position = {x : random(width), y: random(height)}
+      b.position = {x : this.p.random(this.size.x), y: this.p.random(this.size.y)}
     }
     if (!b.maxspeed) {
-      b.maxspeed = map(b.dna.genes[0], 0, 1, 15, 0)
+      b.maxspeed = this.p.map(b.dna.genes[0], 0, 1, 15, 0)
     }
     if (!b.radius) {
-      b.radius = map(b.dna.genes[0], 0, 1, 0, 50)
+      b.radius = this.p.map(b.dna.genes[0], 0, 1, 0, 50)
     }
     if (!b.observation_limit) {
       b.observation_limit = b.radius * 3
@@ -84,9 +86,9 @@ class World {
   }
 
   position(b) {
-    return createVector(b.position.x, b.position.y)
+    return this.p.createVector(b.position.x, b.position.y)
   }
-
+ks
   spin() {
     this.bloops.forEachRev((b, i) => {
       // Show the bloop.
