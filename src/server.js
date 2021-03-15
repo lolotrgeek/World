@@ -39,6 +39,8 @@ function parseMessage(ws, data, callback) {
         }
         else if (data === "WORLD") {
             addWorld(ws)
+            let msg = callback(data)
+            reply(ws, msg)
         }
         else {
             // log('received:' + data)
@@ -59,6 +61,12 @@ function addWorld(ws) {
     worlds.push(ws)
     log("WORLD ADDED")
     return
+}
+
+function reply(ws, data) {
+    if(typeof data === 'string') {
+        ws.send(data)
+    }
 }
 
 function sendTo(data, list) {
