@@ -37,13 +37,13 @@ Object.defineProperty(Array.prototype, 'forEachRev', {
 Array.prototype.remove = function() {
   var what, a = arguments, L = a.length, ax;
   while (L && this.length) {
-      what = a[--L];
+      what = a[--L]
       while ((ax = this.indexOf(what)) !== -1) {
-          this.splice(ax, 1);
+          this.splice(ax, 1)
       }
   }
-  return this;
-};
+  return this
+}
 
 Array.choice = function (array) {
   return array[Math.floor(Math.random() * array.length)]

@@ -12,5 +12,6 @@ ws.onmessage = async (message) => {
     if (typeof message.data === 'string') {
         msg = JSON.parse(message.data)
         // console.log(msg)
+        redraw()
     }
 }

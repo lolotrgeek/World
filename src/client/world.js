@@ -67,14 +67,12 @@ class World {
     else return false
   }
 
-  visualize(b) {
+  manifest(b) {
     if (!b.position) {
-      b.position = createVector(random(width), random(height))
-    } else {
-      b.position = createVector(b.position.x, b.position.y)
+      b.position = {x : random(width), y: random(height)}
     }
     if (!b.maxspeed) {
-      b.maxspeed = map(b.dna.genes[0], 0, 1, 15, 0) // The bigger the bloop, the slower it is
+      b.maxspeed = map(b.dna.genes[0], 0, 1, 15, 0)
     }
     if (!b.radius) {
       b.radius = map(b.dna.genes[0], 0, 1, 0, 50)
@@ -83,6 +81,10 @@ class World {
       b.observation_limit = b.radius * 3
     }
     return b
+  }
+
+  position(b) {
+    return createVector(b.position.x, b.position.y)
   }
 
   spin() {
@@ -109,12 +111,10 @@ class World {
       // un-vectorize
       b.position = { x: b.position.x, y: b.position.y }
 
-      console.log(JSON.stringify(b))
-      // ws.send(JSON.stringify(b))
-
-
+      // console.log(JSON.stringify(b))
       // console.log(msg)
 
     })
+    // ws.send(JSON.stringify(this.bloops))
   }
 }

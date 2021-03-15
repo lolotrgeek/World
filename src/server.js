@@ -13,11 +13,10 @@ const wsServer = new WebSocket.Server({ port: WS_PORT }, () => log(`WS Server is
 let clients = []
 let worlds = []
 
-function run() {
-    server()
+function listen(callback) {
     // send...
     wsServer.on("connection", (ws, req) => {
-        ws.on("message", (data) => parseMessage(ws, data))
+        ws.on("message", (data) => parseMessage(ws, data, callback))
         ws.on("error", (error) => log("WebSocket error observed: " + error))
     })
 }
@@ -32,7 +31,7 @@ function broadcast(msg) {
     wsServer.broadcast(msg)
 }
 
-function parseMessage(ws, data) {
+function parseMessage(ws, data, callback) {
     if (typeof data === 'string') {
         // log('Data: '+ data)
         if (data === "CLIENT") {
@@ -42,7 +41,9 @@ function parseMessage(ws, data) {
             addWorld(ws)
         }
         else {
-            log(data)
+            // log('received:' + data)
+            let obj = JSON.parse(data)
+            callback(obj)
             // sendTo(data, worlds)
         }
     }
@@ -72,7 +73,7 @@ function sendTo(data, list) {
     })
 }
 
-function server() {
+function run() {
     app.use(express.static("."))
     app.get("/", (req, res) => res.sendFile(path.resolve(__dirname, "./client/world.html")))
     app.get("/functions.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/functions.js")))
@@ -82,4 +83,4 @@ function server() {
     app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))
 }
 
-module.exports = { run, broadcast }
+module.exports = { run, listen, broadcast }

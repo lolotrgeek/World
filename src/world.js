@@ -6,7 +6,7 @@
 
 const { Bloop } = require('./creatures/bloop')
 const { DNA } = require('./creatures/dna')
-const { run, broadcast } = require('./server')
+const { run, listen, broadcast } = require('./server')
 
 class World {
   constructor(energy) {
@@ -56,41 +56,57 @@ class World {
     }
   }
 
+  update() {
+    // listening for bloop's states and sending to other bloops and sketch
+    this.bloops.forEachRev((b, i) => {
+      b.spin()
+
+      // pass the bloop an observation
+      // b.observe(nearby.bloops, nearby.foods)
+
+      if (b.ate != null) {
+        // this.food.remove(b.ate)
+      }
+
+      // has bloop selected a mate?
+      if (b.mate && random(1) < odds) {
+        let childDNA = b.actions.reproduce(b.mate)
+        if (childDNA != null) {
+          // TODO: parent give energy to child...
+          childDNA.mutate(0.01)
+          // let child = new Bloop(childDNA)
+          this.bloops.push(child) // TODO: send this over websocket
+        }
+      }
+      if (b.dead()) {
+        this.bloops.splice(i, 1)
+        this.ports.push(b.address)
+        // this.food.add(b.position)
+      }
+      // log(b)
+      b.reset()
+    })
+    broadcast(JSON.stringify(this.bloops))
+  }
+
   spin() {
     run()
-    setInterval(() => {
-      // listening for bloop's states and sending to other bloops and sketch
-      this.bloops.forEachRev((b, i) => {
-        b.spin()
-        
-        // pass the bloop an observation
-
-        // b.observe(nearby.bloops, nearby.foods)
-
-        if (b.ate != null) {
-          // this.food.remove(b.ate)
-        }
-
-        // has bloop selected a mate?
-        if (b.mate && random(1) < odds) {
-          let childDNA = b.actions.reproduce(b.mate)
-          if (childDNA != null) {
-            // TODO: parent give energy to child...
-            childDNA.mutate(0.01)
-            // let child = new Bloop(childDNA)
-            this.bloops.push(child) // TODO: send this over websocket
-          }
-        }
-        if (b.dead()) {
-          this.bloops.splice(i, 1)
-          this.ports.push(b.address)
-          // this.food.add(b.position)
-        }
-        // log(b)
-        b.reset()
-      })
-      broadcast(JSON.stringify(this.bloops))
-    }, 50)
+    this.update()
+    listen(bloops => {
+      if (Array.isArray(bloops) && bloops.length > 0) {
+        this.bloops = bloops.map(heard => {
+          let bloop = new Bloop(heard.dna, heard.health)
+          bloop.actions = heard.actions
+          bloop.position = heard.position
+          bloop.attractions = heard.attractions
+          bloop.phenotype = heard.phenotype
+          bloop.observations = heard.observations
+          return bloop
+        })
+      }
+      // console.log(bloops)
+      this.update()
+    })
   }
 }
 
