@@ -10,7 +10,6 @@
 // When the creatures die, food is left behind
 
 
-let myp5
 let world
 
 function createworld(msg) {
@@ -41,7 +40,7 @@ function startsketch() {
     }
   }
 
-  myp5 = new p5(sketch)
+  let myp5 = new p5(sketch)
 }
 
 listen(msg => {
