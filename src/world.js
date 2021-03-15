@@ -51,8 +51,7 @@ class World {
   spawn(health) {
     console.log('Spawning:', health)
     let dna = new DNA()
-    let bloop = new Bloop(dna, health)
-    bloop = this.manifest(bloop)
+    let bloop = this.manifest(new Bloop(dna, health))
     this.bloops.push(bloop)
   }
 
@@ -113,18 +112,7 @@ class World {
         // console.log(JSON.stringify({world: this}))
         return JSON.stringify({world: this})
       }
-      else if (Array.isArray(msg) && msg.length > 0) {
-        this.bloops = msg.map(heard => {
-          let bloop = new Bloop(heard.dna, heard.health)
-          bloop.actions = heard.actions
-          bloop.position = heard.position
-          bloop.attractions = heard.attractions
-          bloop.phenotype = heard.phenotype
-          bloop.observations = heard.observations
-          return bloop
-        })
-      }
-      setInterval(() => this.update(), 50)
+      setInterval(() => this.update(), 1000)
       // console.log(bloops)
     })
   }

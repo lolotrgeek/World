@@ -29,7 +29,6 @@ function startsketch() {
     p.draw = function () {
       p.background(175)
       world.bloops.forEach(bloop => {
-        bloop = world.manifest(bloop)
         let position = world.position(bloop)
         world.wraparound(position, bloop.radius)
         world.display(bloop)
