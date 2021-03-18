@@ -7,6 +7,11 @@
 class Actions {
     constructor() {}
 
+    ping(self) {
+        // look for nearby creatures
+         
+    }
+
     select(self, others) {
         // select a mate by attractiveness
         let potentials = others.filter(other => {
@@ -19,7 +24,7 @@ class Actions {
         return selection
     }
 
-    move(self) {
+    move(self, x, y) {
         
     }
 

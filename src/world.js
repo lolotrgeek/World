@@ -62,29 +62,33 @@ class World {
     }
   }
 
-  update() {
-    // listening for bloop's states and sending to other bloops/sketch
+  cost(action) {
+    return random(0,1)
+  }
+
+  step() {
     this.bloops.forEachRev((b, i) => {
       b.spin()
 
-      // pass the bloop an observation
-      // b.observe(nearby)
+      if (b.action) {
 
-      if (b.ate != null) {
-        // this.energy.remove(b.ate)
-      }
+        b.health = b.health - this.cost(b.action)
 
-      // has bloop selected a mate?
-      if (b.mate && random(1) < this.odds) {
-        let childDNA = b.actions.reproduce(b.mate)
-        if (childDNA != null) {
-          // TODO: parent give energy to child...
-          childDNA.mutate(0.01)
-          // let child = new Bloop(childDNA)
-          this.bloops.push(child) // TODO: send this over websocket
+        if (b.action.mate && random(1) < this.odds) {
+          let childDNA = b.actions.reproduce(b.mate)
+          if (childDNA != null) {
+            // TODO: parent give energy to child...
+            childDNA.mutate(0.01)
+            // let child = new Bloop(childDNA)
+            this.bloops.push(child) // TODO: send this over websocket
+          }
+        }
+        if(b.action.ping) {
+          broadcast("nearby")
         }
       }
-      if (b.dead()) {
+
+      if (b.health < 0.0) {
         this.bloops.splice(i, 1)
         this.ports.push(b.address)
       }
@@ -96,7 +100,7 @@ class World {
 
   spin() {
     run()
-    this.update()
+    this.step()
     listen(msg => {
       if(msg === "WORLD") {
         // console.log(JSON.stringify({world: this}))

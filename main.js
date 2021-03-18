@@ -1,4 +1,4 @@
-require('./src/functions') // modifying prototypes
+require('./src/functions') 
 
 const {World} = require('./src/world')
 

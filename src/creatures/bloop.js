@@ -14,12 +14,13 @@ class Bloop {
 
     // observations
     this.position = null
-    this.mate = null
-    this.ate = null
 
     // spaces
     this.actions = new Actions()
     this.observations = []
+
+    // action
+    this.action = null // mate, ate, ping, etc...
   }
 
   spin() {
@@ -35,14 +36,9 @@ class Bloop {
   }
 
   reset() {
-    this.ate = null
-    this.mate = null
+    this.action = null
   }
 
-  dead() {
-    if (this.health < 0.0) return true
-    else return false
-  }
 }
 
 
