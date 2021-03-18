@@ -9,11 +9,11 @@ const { DNA } = require('./creatures/dna')
 const { run, listen, broadcast } = require('./server')
 
 class World {
-  constructor(energy) {
+  constructor(energy, odds) {
+    this.odds = odds
     this.energy = energy
     this.bloops = []
     this.ports = []
-
     // generate unique ports
     while (this.ports.length < 1000) {
       let port = randint(10000, 20000)
@@ -30,21 +30,11 @@ class World {
   }
 
   manifest(b) {
-    if (!b.position) {
-      b.position = {x : random(this.ports.length), y: random(this.ports.length)}
-    }
-    if (!b.maxspeed) {
-      b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
-    }
-    if (!b.radius) {
-      b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
-    }
-    if (!b.observation_limit) {
-      b.observation_limit = b.radius * 3
-    }
-    if(!b.address) {
-      b.address = "ws://localhost:" + this.port()
-    }
+    if (!b.position) b.position = {x : random(this.ports.length), y: random(this.ports.length)}
+    if (!b.maxspeed) b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
+    if (!b.radius) b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
+    if (!b.observation_limit) b.observation_limit = b.radius * 3
+    if (!b.address) b.address = "ws://localhost:" + this.port()
     return b
   }
 
@@ -73,7 +63,7 @@ class World {
   }
 
   update() {
-    // listening for bloop's states and sending to other bloops and sketch
+    // listening for bloop's states and sending to other bloops/sketch
     this.bloops.forEachRev((b, i) => {
       b.spin()
 
@@ -85,7 +75,7 @@ class World {
       }
 
       // has bloop selected a mate?
-      if (b.mate && random(1) < odds) {
+      if (b.mate && random(1) < this.odds) {
         let childDNA = b.actions.reproduce(b.mate)
         if (childDNA != null) {
           // TODO: parent give energy to child...
