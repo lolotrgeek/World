@@ -1,12 +1,11 @@
-// The Nature of Code
-// Daniel Shiffman
-// http://natureofcode.com
-
-// Evolution EcoSystem
+// A Proxy for Reality
 
 const { Bloop } = require('./creatures/bloop')
+const { Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 const { run, listen, broadcast } = require('./server')
+
+//TODO: when an agent connects, spawn a bloop for the agent to control
 
 class World {
   constructor(energy, odds) {
@@ -30,7 +29,7 @@ class World {
   }
 
   manifest(b) {
-    if (!b.position) b.position = {x : random(this.ports.length), y: random(this.ports.length)}
+    if (!b.position) b.position = { x: random(this.ports.length), y: random(this.ports.length) }
     if (!b.maxspeed) b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
     if (!b.radius) b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
     if (!b.observation_limit) b.observation_limit = b.radius * 3
@@ -38,10 +37,20 @@ class World {
     return b
   }
 
+  modulate(b) {
+    // attach modules to the creature
+    let modules = [new Look(), new Move(), new Replicate()]
+    if(modules.length <= b.slots) {
+      b.modules = modules
+      b.slots -= modules.length 
+    }
+    return b
+  }
+
   spawn(health) {
     console.log('Spawning:', health)
     let dna = new DNA()
-    let bloop = this.manifest(new Bloop(dna, health))
+    let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     this.bloops.push(bloop)
   }
 
@@ -63,29 +72,30 @@ class World {
   }
 
   cost(action) {
-    return random(0,1)
+    return random(0, 1)
   }
+
+  perform(action) {
+    // if(action.look) {
+    //   console.log('Look', action.look)
+    // }
+    // else if (action.move) {
+    //   console.log('Move', action.move)
+    // }
+    // else if (action.replicate) {
+    //   console.log('Replicate', action.replicate)
+    // }
+   } 
 
   step() {
     this.bloops.forEachRev((b, i) => {
-      b.spin()
+      let action = b.sample()
+      console.log('action', action)
+      b.spin(action)
 
       if (b.action) {
-
-        b.health = b.health - this.cost(b.action)
-
-        if (b.action.mate && random(1) < this.odds) {
-          let childDNA = b.actions.reproduce(b.mate)
-          if (childDNA != null) {
-            // TODO: parent give energy to child...
-            childDNA.mutate(0.01)
-            // let child = new Bloop(childDNA)
-            this.bloops.push(child) // TODO: send this over websocket
-          }
-        }
-        if(b.action.ping) {
-          broadcast("nearby")
-        }
+        b.health -= this.cost(b.action)
+        this.perform(b.action)  
       }
 
       if (b.health < 0.0) {
@@ -102,11 +112,11 @@ class World {
     run()
     this.step()
     listen(msg => {
-      if(msg === "WORLD") {
+      if (msg === "WORLD") {
         // console.log(JSON.stringify({world: this}))
-        return JSON.stringify({world: this})
+        return JSON.stringify({ world: this })
       }
-      setInterval(() => this.update(), 1000)
+      setInterval(() => this.step(), 1000)
       // console.log(bloops)
     })
   }
