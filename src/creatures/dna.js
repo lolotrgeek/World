@@ -30,7 +30,13 @@ class DNA {
     return new DNA(newgenes)
   }
 
-  crossover(genes) {
+  /**
+   * 
+   * @param {Array} dna  an array of dna `[[genes], ...]`
+   * @returns 
+   */
+  crossover(dna) {
+    let genes = dna.flat()
     let choice = [genes[Math.floor(Math.random() * genes.length)]]
     return new DNA(choice)
   }
