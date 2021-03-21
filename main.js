@@ -1,6 +1,6 @@
-require('./src/functions') 
+require('./src/functions')
 
-const {World} = require('./src/world')
+const { World } = require('./src/world/world')
 
 LOGGING = false
 

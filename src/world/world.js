@@ -3,7 +3,7 @@
 const { Bloop } = require('./creatures/bloop')
 const { Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
-const { run, listen, broadcast } = require('./server')
+const { run, listen, broadcast } = require('../server')
 
 //TODO: when an agent connects, spawn a bloop for the agent to control
 
