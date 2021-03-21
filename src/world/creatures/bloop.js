@@ -22,7 +22,7 @@ class Bloop {
     this.modules = []
 
     // state
-    this.action = null
+    this.action = 0
     this.observation = []
   }
 
@@ -32,6 +32,7 @@ class Bloop {
   }
 
   translate(action) {
+    // shift actions to align with modules
     return action - 1
   }
 
@@ -41,13 +42,8 @@ class Bloop {
     }
   }
 
-  // TODO: move this to a random agent
-  sample() {
-    return randint(0, this.action_space)
-  }
-
   reset() {
-    this.action = null
+    this.action = 0
     this.action_space = this.modules.length + 1
   }
 

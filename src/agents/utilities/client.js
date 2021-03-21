@@ -1,11 +1,23 @@
+const WebSocket = require("ws")
+
 const WS_URL = 'ws:///localhost:8888'
 let ws = new WebSocket(WS_URL)
 
-ws.onopen = () => {
-    console.log(`Connected to ${WS_URL}`)
-    ws.send("AGENT")
+/**
+ * Let server know who is here.
+ * @param {string} name 
+ */
+function register(name) {
+    ws.onopen = () => {
+        console.log(`Connected to ${WS_URL}`)
+        ws.send(name)
+    }
 }
 
+/**
+ * Listen for responses from server.
+ * @param {function} callback 
+ */
 function listen(callback) {
     ws.onmessage = async (message) => {
         if (typeof message.data === 'string') {
@@ -13,3 +25,5 @@ function listen(callback) {
         }
     }
 }
+
+module.exports = { register, listen }

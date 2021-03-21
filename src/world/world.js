@@ -12,28 +12,14 @@ class World {
     this.odds = odds
     this.energy = energy
     this.bloops = []
-    this.ports = []
-    // generate unique ports
-    while (this.ports.length < 1000) {
-      let port = randint(10000, 20000)
-      if (this.ports.findint(port) === false) {
-        this.ports.push(port)
-      }
-    }
-  }
-
-  port() {
-    let choice = Array.choice(this.ports)
-    this.ports.remove(choice)
-    return choice
   }
 
   manifest(b) {
-    if (!b.position) b.position = { x: random(this.ports.length), y: random(this.ports.length) }
+    // TODO: update position to reflect agent connection?
+    if (!b.position) b.position = { x: random(1000), y: random(1000) } 
     if (!b.maxspeed) b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
     if (!b.radius) b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
     if (!b.observation_limit) b.observation_limit = b.radius * 3
-    if (!b.address) b.address = "ws://localhost:" + this.port()
     return b
   }
 
@@ -48,6 +34,7 @@ class World {
   }
 
   spawn(health) {
+    // TODO: spawn when an agent connects...
     log('Spawning: ' + health)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
@@ -114,6 +101,9 @@ class World {
       if (msg === "WORLD") {
         // log(JSON.stringify({world: this}))
         return JSON.stringify({ world: this })
+      }
+      if(msg === 'AGENT') {
+
       }
       // log(bloops)
     })    

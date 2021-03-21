@@ -4,18 +4,19 @@
 
 // TODO: connect to an environment, assume control of a spawned entity
 
-class Agent {
-    constructor(actions) {
-        this.action_space = actions 
-    }
+const { register, listen } = require('./utilities/client')
 
-    sample() {
-      let choice = 0
-      if(random(0,2) > 1) {
-        choice = Array.choice(action_space)
-      }
-      return choice
-    }
+class Agent {
+  constructor(actions) {
+    this.action_space = actions   
+  }
+  
+
+  sample() {
+    return randint(0, this.action_space)
+  }
 
 
 }
+
+module.exports = { Agent }
