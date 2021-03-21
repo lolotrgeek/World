@@ -28,13 +28,9 @@ function startsketch() {
 
     p.draw = function () {
       p.background(175)
-      world.bloops.forEach(bloop => {
-        let position = world.position(bloop)
-        world.wraparound(position, bloop.radius)
-        world.display(bloop)
-      })
+      world.spin()
       // console.log(world.bloops)
-      ws.send(JSON.stringify(world.bloops))
+      // ws.send(JSON.stringify(world.bloops))
       // world.spin()
     }
   }

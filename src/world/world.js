@@ -48,7 +48,7 @@ class World {
   }
 
   spawn(health) {
-    console.log('Spawning:', health)
+    log('Spawning: ' + health)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     this.bloops.push(bloop)
@@ -77,27 +77,27 @@ class World {
 
   perform(action) {
     // if(action.look) {
-    //   console.log('Look', action.look)
+    //   log('Look', action.look)
     // }
     // else if (action.move) {
-    //   console.log('Move', action.move)
+    //   log('Move', action.move)
     // }
     // else if (action.replicate) {
-    //   console.log('Replicate', action.replicate)
+    //   log('Replicate', action.replicate)
     // }
    } 
 
   step() {
     this.bloops.forEachRev((b, i) => {
-      let action = b.sample()
-      console.log('action', action)
+      let action = b.action
+      // log('action: ' + action)
       b.spin(action)
 
-      if (b.action) {
+      if (b.action > 0) {
         b.health -= this.cost(b.action)
         this.perform(b.action)  
       }
-
+      log(b.health)
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
         this.ports.push(b.address)
@@ -105,20 +105,22 @@ class World {
       // log(b)
       b.reset()
     })
-    broadcast(JSON.stringify(this.bloops))
   }
 
   spin() {
     run()
-    this.step()
     listen(msg => {
+      // log(msg)
       if (msg === "WORLD") {
-        // console.log(JSON.stringify({world: this}))
+        // log(JSON.stringify({world: this}))
         return JSON.stringify({ world: this })
       }
-      setInterval(() => this.step(), 1000)
-      // console.log(bloops)
-    })
+      // log(bloops)
+    })    
+    setInterval(() => {
+      this.step()
+      broadcast(JSON.stringify(this.bloops))
+    }, 500)
   }
 }
 

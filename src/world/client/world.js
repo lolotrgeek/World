@@ -88,34 +88,12 @@ class World {
   position(b) {
     return this.p.createVector(b.position.x, b.position.y)
   }
-ks
+
   spin() {
-    this.bloops.forEachRev((b, i) => {
-      // Show the bloop.
-
-      this.wraparound(b.position, b.radius)
-      this.display(b)
-
-      let foods = []
-
-      // see what is near each agent
-
-      let nearby = this.nearby(b, foods)
-
-      // pass the bloop an observation
-      // TODO: send back over websocket (or is this all in node world?)
-
-      // show nearby bloops
-      nearby.bloops.map(near => this.showdistance(b.position, near.position, b.attractions))
-
-      b.nearby = nearby
-
-      // un-vectorize
-      b.position = { x: b.position.x, y: b.position.y }
-
-      // console.log(JSON.stringify(b))
-      // console.log(msg)
-
+    this.bloops.forEach(bloop => {
+      let position = this.position(bloop)
+      this.wraparound(position, bloop.radius)
+      this.display(bloop)
     })
     // ws.send(JSON.stringify(this.bloops))
   }
