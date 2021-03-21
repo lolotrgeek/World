@@ -83,11 +83,11 @@ function sendTo(data, list) {
 
 function run() {
     app.use(express.static("."))
-    app.get("/", (req, res) => res.sendFile(path.resolve(__dirname, "./client/world.html")))
-    app.get("/functions.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/functions.js")))
-    app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sockets.js")))
-    app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/sketch.js")))
-    app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "./client/world.js")))
+    app.get("/", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/world.html")))
+    app.get("/functions.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/functions.js")))
+    app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sockets.js")))
+    app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sketch.js")))
+    app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/world.js")))
     app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))
 }
 
