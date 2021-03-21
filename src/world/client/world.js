@@ -8,7 +8,7 @@ class World {
   constructor({bloops, energy, ports }) {
     this.food = energy
     this.bloops = bloops
-    this.size = {x: ports.length, y: ports.length} // network space to visual space
+    this.size = {x: 1000, y: 1000} // TODO: send through ports to visualize network space?
     this.p = null
   }
 
