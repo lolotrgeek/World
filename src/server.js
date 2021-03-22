@@ -34,8 +34,10 @@ function broadcast(msg) {
 function parseMessage(ws, data, callback) {
     if (typeof data === 'string') {
         // log('Data: '+ data)
-        if (data === "CLIENT") {
-            addClient(ws)
+        if (data === "AGENT") {
+            addAgent(ws)
+            let msg = callback(data)
+            reply(ws, msg)            
         }
         else if (data === "WORLD") {
             addWorld(ws)
@@ -47,13 +49,15 @@ function parseMessage(ws, data, callback) {
             let obj = JSON.parse(data)
             callback(obj)
             // sendTo(data, worlds)
+
+            //TODO: catch errors
         }
     }
 }
 
-function addClient(ws) {
+function addAgent(ws) {
     clients.push(ws)
-    log("CLIENT ADDED")
+    log("AGENT ADDED")
     return
 }
 

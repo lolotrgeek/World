@@ -8,10 +8,10 @@ let ws = new WebSocket(WS_URL)
  * @param {string} name 
  */
 function register(name) {
-    ws.onopen = () => {
+    ws.on('open', function open() {
         console.log(`Connected to ${WS_URL}`)
         ws.send(name)
-    }
+    })
 }
 
 /**
@@ -19,11 +19,11 @@ function register(name) {
  * @param {function} callback 
  */
 function listen(callback) {
-    ws.onmessage = async (message) => {
-        if (typeof message.data === 'string') {
-            callback(JSON.parse(message.data))
+    ws.on('message', function incoming(data) {
+        if (typeof data === 'string') {
+            callback(JSON.parse(data))
         }
-    }
+    })
 }
 
 module.exports = { register, listen }

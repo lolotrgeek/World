@@ -1,7 +1,7 @@
+const { register, listen } = require('./utilities/client')
+const { v4: uuidv4 } = require('uuid')
 
-const { Agent } = require('./agent')
-
-class Agents {
+class Agent {
     constructor(amount) {
         this.amount = amount
         this.agents = []
@@ -21,9 +21,9 @@ class Agents {
         return choice
     }
 
-    create() {
+    create(actions) {
         while (this.agents.length < this.amount) {
-            let agent = new Agent(bloop.action_space)
+            let agent = new Agent(actions)
             agent.address = "ws://localhost:" + this.port()
             this.agents.push(agent)
         }
@@ -32,4 +32,28 @@ class Agents {
 
 }
 
-module.exports = { Agents }
+class RandomAgent {
+    constructor() {
+      this.action_space = 0
+      this.name = uuidv4()  
+    }
+    
+    sample() {
+      return randint(0, this.action_space)
+    }
+  
+    spin() {
+      listen(msg => {
+        if (typeof msg === 'object' && typeof msg.world === 'object') {
+          console.log(msg)
+        }
+      })
+    }
+  
+    reset() {
+      register("AGENT")
+    }
+  
+  }
+
+module.exports = { Agent, RandomAgent }

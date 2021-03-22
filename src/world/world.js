@@ -97,18 +97,21 @@ class World {
   spin() {
     run()
     listen(msg => {
-      // log(msg)
+      log(msg)
       if (msg === "WORLD") {
         // log(JSON.stringify({world: this}))
         return JSON.stringify({ world: this })
       }
-      if(msg === 'AGENT') {
-
+      if(msg === "AGENT") {
+        let health = this.distribute(this.energy)
+        this.spawn(health)
+        this.conserve(health)
       }
       // log(bloops)
     })    
     setInterval(() => {
       this.step()
+      // Observations:
       broadcast(JSON.stringify(this.bloops))
     }, 500)
   }
