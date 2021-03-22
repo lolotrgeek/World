@@ -11,14 +11,26 @@ const HTTP_PORT = 8000
 const wsServer = new WebSocket.Server({ port: WS_PORT }, () => log(`WS Server is listening at ${WS_PORT}`))
 
 let clients = []
-let worlds = []
 
+/**
+ * 
+ * @param {function} callback - do something with incoming message, 
+ * returning a string from the callback will send that string as a reply to sender
+ */
 function listen(callback) {
     // send...
     wsServer.on("connection", (ws, req) => {
         ws.on("message", (data) => parseMessage(ws, data, callback))
         ws.on("error", (error) => log("WebSocket error observed: " + error))
     })
+}
+
+function parseMessage(ws, data, callback) {
+    if (typeof data === 'string') {
+        clients.push(ws)
+        let msg = callback(data)
+        reply(ws, msg)
+    }
 }
 
 wsServer.broadcast = function broadcast(msg) {
@@ -31,56 +43,24 @@ function broadcast(msg) {
     wsServer.broadcast(msg)
 }
 
-function parseMessage(ws, data, callback) {
-    if (typeof data === 'string') {
-        // log('Data: '+ data)
-        if (data === "AGENT") {
-            addAgent(ws)
-            let msg = callback(data)
-            reply(ws, msg)            
-        }
-        else if (data === "WORLD") {
-            addWorld(ws)
-            let msg = callback(data)
-            reply(ws, msg)
-        }
-        else {
-            // log('received:' + data)
-            let obj = JSON.parse(data)
-            callback(obj)
-            // sendTo(data, worlds)
-
-            //TODO: catch errors
-        }
-    }
-}
-
-function addAgent(ws) {
-    clients.push(ws)
-    log("AGENT ADDED")
-    return
-}
-
-function addWorld(ws) {
-    worlds.push(ws)
-    log("WORLD ADDED")
-    return
-}
-
 function reply(ws, data) {
     if(typeof data === 'string') {
         ws.send(data)
     }
 }
 
-function sendTo(data, list) {
-    list.forEach((ws, i) => {
-        if (list[i] == ws && ws.readyState === 1) {
+/**
+ * 
+ * @param {*} data 
+ */
+function send(data) {
+    clients.forEach((ws, i) => {
+        if (clients[i] == ws && ws.readyState === 1) {
             log(data)
             ws.send(data)
         } else {
             log(`CLIENT ${i} DISCONNECTED`)
-            list.splice(i, 1)
+            clients.splice(i, 1)
         }
     })
 }
@@ -95,4 +75,4 @@ function run() {
     app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))
 }
 
-module.exports = { run, listen, broadcast }
+module.exports = { run, listen, reply, broadcast, send }

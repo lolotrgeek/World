@@ -12,11 +12,25 @@ class World {
     this.odds = odds
     this.energy = energy
     this.bloops = []
+    this.worlds = []
+    this.agents = []
+  }
+
+  addAgent(agent) {
+    this.agents.push(agent)
+    log("AGENT ADDED")
+    return
+  }
+
+  addWorld(world) {
+    this.worlds.push(world)
+    log("WORLD ADDED")
+    return
   }
 
   manifest(b) {
     // TODO: update position to reflect agent connection?
-    if (!b.position) b.position = { x: random(1000), y: random(1000) } 
+    if (!b.position) b.position = { x: random(1000), y: random(1000) }
     if (!b.maxspeed) b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
     if (!b.radius) b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
     if (!b.observation_limit) b.observation_limit = b.radius * 3
@@ -26,9 +40,9 @@ class World {
   modulate(b) {
     // attach modules to the creature
     let modules = [new Look(), new Move(), new Replicate()]
-    if(modules.length <= b.slots) {
+    if (modules.length <= b.slots) {
       b.modules = modules
-      b.slots -= modules.length 
+      b.slots -= modules.length
     }
     return b
   }
@@ -72,7 +86,7 @@ class World {
     // else if (action.replicate) {
     //   log('Replicate', action.replicate)
     // }
-   } 
+  }
 
   step() {
     this.bloops.forEachRev((b, i) => {
@@ -82,9 +96,9 @@ class World {
 
       if (b.action > 0) {
         b.health -= this.cost(b.action)
-        this.perform(b.action)  
+        this.perform(b.action)
       }
-      log(b.health)
+      // log(b.health)
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
         this.ports.push(b.address)
@@ -97,18 +111,33 @@ class World {
   spin() {
     run()
     listen(msg => {
-      log(msg)
+      // log(msg)
       if (msg === "WORLD") {
         // log(JSON.stringify({world: this}))
+        this.addWorld("WORLD") // TODO: add uuid for worlds
         return JSON.stringify({ world: this })
       }
-      if(msg === "AGENT") {
-        let health = this.distribute(this.energy)
-        this.spawn(health)
-        this.conserve(health)
+      else {
+        try {
+          let obj = JSON.parse(msg)
+          log(obj)
+          if (obj.agent) {
+            this.addAgent(obj.agent.name)
+            let health = this.distribute(this.energy)
+            this.spawn(health)
+            this.conserve(health)
+
+            // TODO: remove bloop on agent disconnect
+            return {connected: obj.agent.name}
+          }
+        }
+        catch (err) {
+          log(err)
+        }
+
       }
       // log(bloops)
-    })    
+    })
     setInterval(() => {
       this.step()
       // Observations:

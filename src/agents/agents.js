@@ -34,26 +34,26 @@ class Agent {
 
 class RandomAgent {
     constructor() {
-      this.action_space = 0
-      this.name = uuidv4()  
+        this.name = uuidv4()
+        this.action_space = 0
     }
-    
+
     sample() {
-      return randint(0, this.action_space)
+        return randint(0, this.action_space)
     }
-  
+
     spin() {
-      listen(msg => {
-        if (typeof msg === 'object' && typeof msg.world === 'object') {
-          console.log(msg)
-        }
-      })
+        listen(msg => {
+            if (typeof msg === 'object' && typeof msg.world === 'object') {
+                console.log(msg)
+            }
+        })
     }
-  
+
     reset() {
-      register("AGENT")
+        register({ agent: this })
     }
-  
-  }
+
+}
 
 module.exports = { Agent, RandomAgent }

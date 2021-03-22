@@ -5,12 +5,12 @@ let ws = new WebSocket(WS_URL)
 
 /**
  * Let server know who is here.
- * @param {string} name 
+ * @param {object} agent 
  */
-function register(name) {
+function register(agent) {
     ws.on('open', function open() {
         console.log(`Connected to ${WS_URL}`)
-        ws.send(name)
+        ws.send(JSON.stringify(agent))
     })
 }
 
