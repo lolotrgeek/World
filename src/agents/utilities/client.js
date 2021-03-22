@@ -26,4 +26,13 @@ function listen(callback) {
     })
 }
 
-module.exports = { register, listen }
+
+/**
+ * Let server know who is here.
+ * @param {object} agent 
+ */
+function send(data) {
+    if (ws.readyState === 1) ws.send(JSON.stringify(data))
+}
+
+module.exports = { register, listen, send }

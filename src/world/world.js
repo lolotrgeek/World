@@ -48,11 +48,11 @@ class World {
   }
 
   spawn(health) {
-    // TODO: spawn when an agent connects...
     log('Spawning: ' + health)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
+    bloop.name = this.bloops.length
     this.bloops.push(bloop)
     return bloop
   }
@@ -66,7 +66,6 @@ class World {
   }
 
   populate() {
-    // Convert energy into bloops
     while (this.energy > 0) {
       let health = this.distribute(this.energy)
       this.spawn(health)
@@ -79,31 +78,24 @@ class World {
   }
 
   perform(action) {
-    // if(action.look) {
-    //   log('Look', action.look)
-    // }
-    // else if (action.move) {
-    //   log('Move', action.move)
-    // }
-    // else if (action.replicate) {
-    //   log('Replicate', action.replicate)
-    // }
+    // translate action from creature into world
   }
 
   step() {
     this.bloops.forEachRev((b, i) => {
       let action = b.action
-      // log('action: ' + action)
+      log('action: ' + action)
       b.spin(action)
 
       if (b.action > 0) {
-        b.health -= this.cost(b.action)
+        let cost = this.cost(b.action)
+        log('cost: ' + cost)
+        b.health -= cost
         this.perform(b.action)
       }
-      // log(b.health)
+      log(b.health)
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
-        this.ports.push(b.address)
       }
       // log(b)
       b.reset()
@@ -122,7 +114,7 @@ class World {
       else {
         try {
           let obj = JSON.parse(msg)
-          log(obj)
+          // log(obj)
           if (obj.agent) {
             if (this.energy > 0) {
               this.addAgent(obj.agent.name)
@@ -131,13 +123,19 @@ class World {
               this.conserve(health)
               log(JSON.stringify({ creature: bloop }))
               // TODO: remove bloop on agent disconnect
-              broadcast(JSON.stringify({ creature: bloop }))
+              broadcast(JSON.stringify({ creature: bloop, actor: obj.agent.name }))
               // return { creature: bloop }
             } 
             else {
               broadcast(JSON.stringify({ creature: false }))
               // return {creature: false} 
             }
+          }
+          else if(obj.action && obj.creature >= 0) {
+            // log(obj)
+            this.bloops[obj.creature].action = obj.action
+            // log(this.bloops[obj.creature].action)
+            // log(this.bloops[obj.creature].health)
           }
         }
         catch (err) {

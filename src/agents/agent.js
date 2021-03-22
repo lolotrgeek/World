@@ -1,4 +1,4 @@
-
+require('../functions')
 // consumes a state and chooses an action from a given action space
 // this is a hardcoded agent, will later be replaced with a neural network.
 
@@ -10,14 +10,17 @@ let amount = 5
 let agents = []
 
 function run() {
-    while(amount > agents.length) {
+    while (amount > agents.length) {
         let agent = new RandomAgent()
         agents.push(agent)
     }
-    agents.forEach(agent => {
-        // TODO: multiprocess this...
-        agent.reset()
-        agent.spin()
-    })
+
+    // TODO: multiprocess this...
+    agents.forEach(agent => agent.reset())
+    setInterval(() => {
+        agents.forEach(agent => agent.spin())
+    }, 500)
+
 }
 run()
+

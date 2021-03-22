@@ -1,4 +1,4 @@
-const { register, listen } = require('./utilities/client')
+const { register, listen, send } = require('./utilities/client')
 const { v4: uuidv4 } = require('uuid')
 
 class Agent {
@@ -36,6 +36,7 @@ class RandomAgent {
     constructor() {
         this.name = uuidv4()
         this.action_space = 0
+        this.creature = {}
     }
 
     sample() {
@@ -43,18 +44,16 @@ class RandomAgent {
     }
 
     spin() {
-        listen(msg => {
-            if(typeof msg === 'object') {
-                // console.log(Object.keys(msg))
-            }
-            if (msg.creature) {
-                this.action_space = msg.creature.action_space
-                console.log(msg.creature.action_space) // need to set this
-            }
-        })
+        send({action: this.sample(), actor: this.name, creature: this.creature})
     }
 
     reset() {
+        listen(msg => {
+            if (msg.creature && msg.actor === this.name) {
+                this.creature = msg.creature.name
+                this.action_space = msg.creature.action_space
+            }
+        })
         register({ agent: this })
     }
 

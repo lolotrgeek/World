@@ -94,6 +94,7 @@ class World {
       let position = this.position(bloop)
       this.wraparound(position, bloop.radius)
       this.display(bloop)
+      console.log(bloop.health)
     })
     // ws.send(JSON.stringify(this.bloops))
   }

@@ -38,7 +38,8 @@ class Bloop {
 
   act(action) {
     if (action && action !== 0) {
-      this.action = this.modules[this.translate(action)].spin(this)
+      // TODO: translate action called from agent into action perscribed by module
+      // this.action = this.modules[this.translate(action)].spin(this)
     }
   }
 
