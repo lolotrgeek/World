@@ -52,7 +52,9 @@ class World {
     log('Spawning: ' + health)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
+    bloop.reset()
     this.bloops.push(bloop)
+    return bloop
   }
 
   distribute(energy) {
@@ -122,13 +124,20 @@ class World {
           let obj = JSON.parse(msg)
           log(obj)
           if (obj.agent) {
-            this.addAgent(obj.agent.name)
-            let health = this.distribute(this.energy)
-            this.spawn(health)
-            this.conserve(health)
-
-            // TODO: remove bloop on agent disconnect
-            return {connected: obj.agent.name}
+            if (this.energy > 0) {
+              this.addAgent(obj.agent.name)
+              let health = this.distribute(this.energy)
+              let bloop = this.spawn(health)
+              this.conserve(health)
+              log(JSON.stringify({ creature: bloop }))
+              // TODO: remove bloop on agent disconnect
+              broadcast(JSON.stringify({ creature: bloop }))
+              // return { creature: bloop }
+            } 
+            else {
+              broadcast(JSON.stringify({ creature: false }))
+              // return {creature: false} 
+            }
           }
         }
         catch (err) {

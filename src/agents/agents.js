@@ -44,8 +44,12 @@ class RandomAgent {
 
     spin() {
         listen(msg => {
-            if (typeof msg === 'object' && typeof msg.world === 'object') {
-                console.log(msg)
+            if(typeof msg === 'object') {
+                // console.log(Object.keys(msg))
+            }
+            if (msg.creature) {
+                this.action_space = msg.creature.action_space
+                console.log(msg.creature.action_space) // need to set this
             }
         })
     }

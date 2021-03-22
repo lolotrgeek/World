@@ -6,7 +6,18 @@
 
 const { RandomAgent } = require('./agents')
 
-let agent = new RandomAgent()
+let amount = 5
+let agents = []
 
-agent.reset()
-agent.spin()
+function run() {
+    while(amount > agents.length) {
+        let agent = new RandomAgent()
+        agents.push(agent)
+    }
+    agents.forEach(agent => {
+        // TODO: multiprocess this...
+        agent.reset()
+        agent.spin()
+    })
+}
+run()
