@@ -36,7 +36,7 @@ class RandomAgent {
     constructor() {
         this.name = uuidv4()
         this.action_space = 0
-        this.creature = {}
+        this.creature = null
     }
 
     sample() {
@@ -50,8 +50,13 @@ class RandomAgent {
     reset() {
         listen(msg => {
             if (msg.creature && msg.actor === this.name) {
+                log(`Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
                 this.creature = msg.creature.name
                 this.action_space = msg.creature.action_space
+            }
+            if(this.creature && Array.isArray(msg) && !msg.find(creature => creature.name === this.creature)) {
+                log('Creature Died: ' + this.creature)
+                this.creature = null
             }
         })
         register({ agent: this })
