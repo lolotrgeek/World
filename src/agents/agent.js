@@ -6,8 +6,11 @@ require('../functions')
 
 const { RandomAgent } = require('./agents')
 
+LOGGING = false
+
 let amount = 5
 let agents = []
+let rotations = 0
 
 function run() {
     while (amount > agents.length) {
@@ -18,7 +21,14 @@ function run() {
     // TODO: multiprocess this...
     agents.forEach(agent => agent.reset())
     setInterval(() => {
-        agents.forEach(agent => agent.spin())
+        agents.forEach((agent, i) => {
+            if (agent.creature !== null) agent.spin()
+            else if(rotations > 1) {
+                log(`Stopping Agent ${agent.name}`)
+                agents.splice(i, 1)
+            }
+        })
+        rotations++
     }, 500)
 
 }
