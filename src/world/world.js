@@ -1,7 +1,7 @@
 // A Proxy for Reality
 
 const { Bloop } = require('./creatures/bloop')
-const { Look, Move, Replicate } = require('./modules/actions')
+const { Module, Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 const { run, listen, broadcast } = require('../server')
 
@@ -39,11 +39,12 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Look(), new Move(), new Replicate()]
+    let modules = [new Module(), new Look(), new Move(), new Replicate()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
     }
+    //TODO: handle trying to attach too many modules
     return b
   }
 
@@ -77,27 +78,19 @@ class World {
     return random(0, 1)
   }
 
-  perform(action) {
-    // translate action from creature into world
-  }
-
   step() {
     this.bloops.forEachRev((b, i) => {
-      let action = b.action
-      log('action: ' + action)
-      b.spin(action)
+      b.spin(b.action)
 
       if (b.action > 0) {
         let cost = this.cost(b.action)
-        log('cost: ' + cost)
         b.health -= cost
-        this.perform(b.action)
+        let module = b.modules[b.action]
+        log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module}, cost: ${cost}, health: ${b.health} `)
       }
-      log(b.health)
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
       }
-      // log(b)
       b.reset()
     })
   }
@@ -121,29 +114,43 @@ class World {
               let health = this.distribute(this.energy)
               let bloop = this.spawn(health)
               this.conserve(health)
-              log(JSON.stringify({ creature: bloop }))
+              // log(JSON.stringify({ creature: bloop }))
               // TODO: remove bloop on agent disconnect
               broadcast(JSON.stringify({ creature: bloop, actor: obj.agent.name }))
               // return { creature: bloop }
-            } 
+            }
             else {
               broadcast(JSON.stringify({ creature: false }))
               // return {creature: false} 
             }
           }
-          else if(obj.action && obj.creature >= 0) {
-            // log(obj)
-            this.bloops[obj.creature].action = obj.action
-            // log(this.bloops[obj.creature].action)
+          else if (obj.action >= 0 && obj.creature >= 0) {
+            // NOTE: action is set here...
+            let found = null
+            for (let i = 0; i < this.bloops.length; i++) {
+              let bloop = this.bloops[i]
+              if (bloop.name === obj.creature) {
+                bloop.action = obj.action
+                // log('found ' + obj.creature)
+                found = bloop
+                break
+              }
+            }
+
+            if (!found) {
+              log(obj.creature + ' not found!')
+              console.log(obj.creature, ' not found in ', this.bloops)
+            }
+            
+            // log("action" + this.bloops[obj.creature])
             // log(this.bloops[obj.creature].health)
-          }
+          } 
         }
         catch (err) {
-          log(err)
+          // log(err)
         }
 
       }
-      // log(bloops)
     })
     setInterval(() => {
       this.step()

@@ -6,6 +6,7 @@
 class Bloop {
   constructor(dna_, health) {
     // features
+    this.name = null
     this.health = health
     this.dna = dna_
     this.attractions = [Math.random()]
@@ -18,7 +19,7 @@ class Bloop {
     this.observation_space = 0
 
     // modules
-    this.slots = 3
+    this.slots = 4
     this.modules = []
 
     // state
@@ -31,21 +32,16 @@ class Bloop {
     this.observation = []
   }
 
-  translate(action) {
-    // shift actions to align with modules
-    return action - 1
-  }
-
   act(action) {
     if (action && action !== 0) {
-      // TODO: translate action called from agent into action perscribed by module
+      // TODO: translate action called from agent into action by module
       // this.action = this.modules[this.translate(action)].spin(this)
     }
   }
 
   reset() {
     this.action = 0
-    this.action_space = this.modules.length + 1
+    this.action_space = this.modules.length
   }
 
 }
