@@ -86,7 +86,8 @@ class World {
         let cost = this.cost(b.action)
         b.health -= cost
         let module = b.modules[b.action]
-        log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
+        // log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
+        module.spin(b)
       }
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)

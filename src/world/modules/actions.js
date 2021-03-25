@@ -18,12 +18,13 @@ class Look extends Module {
         super()
     }
     spin(self) {
-        return {'look': true}
+        log('Looking!')
+        return { 'look': true }
     }
 }
 
 class Select extends Module {
-    constructor() {super()}
+    constructor() { super() }
 
     spin(self) {
         let others = params
@@ -35,7 +36,7 @@ class Select extends Module {
         })
         // select the most attractive
         let selection = Array.max(potentials)
-        return {'selection': selection}
+        return { 'selection': selection }
     }
 }
 
@@ -45,14 +46,15 @@ class Move extends Module {
         this.params = 2
     }
 
-    spin(self){
+    spin(self) {
+        log('Moving!')
         let x, y
-        if(self.position.x && self.position.y) {
+        if (self.position.x && self.position.y) {
             x = self.position
             y = self.position
         }
-        
-        return {'move': [x, y]}
+
+        return { 'move': [x, y] }
     }
 }
 
@@ -62,7 +64,8 @@ class Replicate extends Module {
     }
 
     spin(self) {
-        return {'replicate': self.dna.copy()}
+        log('Replicating!')
+        return { 'replicate': self.dna.copy() }
     }
 }
 
