@@ -1,6 +1,8 @@
 const { register, listen, send } = require('./utilities/client')
 const { v4: uuidv4 } = require('uuid')
 
+const isObservation = data => Array.isArray(data)
+
 class Agent {
     constructor(amount) {
         this.amount = amount
@@ -44,7 +46,7 @@ class RandomAgent {
     }
 
     spin() {
-        send({action: this.sample(), actor: this.name, creature: this.creature})
+        send({ action: this.sample(), actor: this.name, creature: this.creature })
     }
 
     reset() {
@@ -54,9 +56,12 @@ class RandomAgent {
                 this.creature = msg.creature.name
                 this.action_space = msg.creature.action_space
             }
-            if(this.creature && Array.isArray(msg) && !msg.find(creature => creature.name === this.creature)) {
-                log('Creature Died: ' + this.creature)
-                this.creature = null
+            if (isObservation(msg)) {
+                if (this.creature && !msg.find(creature => creature.name === this.creature)) {
+                    log('Creature Died: ' + this.creature)
+                    this.creature = null
+                }
+
             }
         })
         register({ agent: this })
