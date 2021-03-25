@@ -97,11 +97,6 @@ class World {
           b.state[key] = result[key] 
         })
         log(b.state)
-
-        // Prescribe how modules interact with World
-        // if look -> result is "nearby" creatures (state)
-        // if move -> result is the new position (state) -> result updates position
-        // if replicate -> result is copy of dna (state)
       }
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
