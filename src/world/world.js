@@ -29,11 +29,13 @@ class World {
   }
 
   manifest(b) {
-    // TODO: update position to reflect agent connection?
-    if (!b.position) b.position = { x: random(1000), y: random(1000) }
-    if (!b.maxspeed) b.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
-    if (!b.radius) b.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
-    if (!b.observation_limit) b.observation_limit = b.radius * 3
+    // TODO: update position to reflect agent connection? (network space)
+    // set initial state of creature
+    if (!b.state.position) b.state.position = { x: random(1000), y: random(1000) }
+    if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
+    if (!b.state.radius) b.state.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
+    if (!b.state.visual_space) b.state.visual_space = b.state.radius * 3 // observation limits
+    if(!b.state.nearby) b.state.nearby = []
     return b
   }
 
@@ -81,13 +83,25 @@ class World {
   step() {
     this.bloops.forEachRev((b, i) => {
       b.spin(b.action)
-
       if (b.action > 0) {
+        b.observations = this.bloops
         let cost = this.cost(b.action)
         b.health -= cost
         let module = b.modules[b.action]
         // log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
-        module.spin(b)
+        let result = module.spin(b)
+        // new state = last state, mutated by action result
+
+        // add key/value of result to state object
+        Object.keys(result).forEach(key => {
+          b.state[key] = result[key] 
+        })
+        log(b.state)
+
+        // Prescribe how modules interact with World
+        // if look -> result is "nearby" creatures (state)
+        // if move -> result is the new position (state) -> result updates position
+        // if replicate -> result is copy of dna (state)
       }
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
@@ -139,8 +153,7 @@ class World {
             }
 
             if (!found) {
-              log(obj.creature + ' not found!')
-              console.log(obj.creature, ' not found in ', this.bloops)
+              // log(obj.creature + ' not found!')
             }
             
             // log("action" + this.bloops[obj.creature])

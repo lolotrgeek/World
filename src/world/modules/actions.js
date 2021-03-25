@@ -18,8 +18,15 @@ class Look extends Module {
         super()
     }
     spin(self) {
-        log('Looking!')
-        return { 'look': true }
+        // TODO: make this a NN that learns "attention".
+        let result = self.observations.filter(observation => {
+            if (observation.x <= self.state.visual_space && observation.y <= self.state.visual_space) {
+                return true
+            } else return false
+        })
+
+        // console.log('Saw: ', result)
+        return {nearby: result}
     }
 }
 
@@ -47,14 +54,13 @@ class Move extends Module {
     }
 
     spin(self) {
-        log('Moving!')
-        let x, y
-        if (self.position.x && self.position.y) {
-            x = self.position
-            y = self.position
+        let position = {}
+        if (self.state.position.x && self.state.position.y) {
+            position.x = self.state.position.x + random(0,1)
+            position.y = self.state.position.y + random(0,1)
         }
-
-        return { 'move': [x, y] }
+        // console.log({position : {x, y}})
+        return {position}
     }
 }
 
@@ -64,8 +70,8 @@ class Replicate extends Module {
     }
 
     spin(self) {
-        log('Replicating!')
-        return { 'replicate': self.dna.copy() }
+        // log('Replicating!')
+        return self.dna.copy()
     }
 }
 

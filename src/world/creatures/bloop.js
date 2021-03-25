@@ -23,13 +23,13 @@ class Bloop {
     this.modules = []
 
     // state
+    this.observations = []
     this.action = 0
-    this.observation = []
+    this.state = {}
   }
 
   spin(action) {
     this.act(action)
-    this.observation = []
   }
 
   act(action) {
@@ -42,6 +42,7 @@ class Bloop {
   reset() {
     this.action = 0
     this.action_space = this.modules.length
+    this.observations = []
   }
 
 }

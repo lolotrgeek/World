@@ -57,11 +57,13 @@ class RandomAgent {
                 this.action_space = msg.creature.action_space
             }
             if (isObservation(msg)) {
+                // this.creature.observations = msg
+
                 if (this.creature && !msg.find(creature => creature.name === this.creature)) {
                     log('Creature Died: ' + this.creature)
                     this.creature = null
                 }
-
+                
             }
         })
         register({ agent: this })
