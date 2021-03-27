@@ -18,6 +18,7 @@ class Look extends Module {
         super()
     }
     spin(self) {
+        // if look -> result is "nearby" creatures (state)
         // TODO: make this a NN that learns "attention".
         let result = self.observations.filter(observation => {
             if (observation.x <= self.state.visual_space && observation.y <= self.state.visual_space) {
@@ -26,7 +27,7 @@ class Look extends Module {
         })
 
         // console.log('Saw: ', result)
-        return {nearby: result}
+        return { nearby: result }
     }
 }
 
@@ -50,26 +51,32 @@ class Select extends Module {
 class Move extends Module {
     constructor() {
         super()
-        this.params = 2
+        this.params = 2 // let agent know spin has two params (x, y)
     }
-
     spin(self) {
+        // if move -> result is the new position (state) -> result updates position
         let position = {}
-        if (self.state.position.x && self.state.position.y) {
-            position.x = self.state.position.x + random(0,1)
-            position.y = self.state.position.y + random(0,1)
-        }
-        // console.log({position : {x, y}})
-        return {position}
+
+        let x = self.params[0]
+        let y = self.params[1]
+
+        if (x && y && self.state.position.x && self.state.position.y) {
+            let vx = noise(-self.state.maxspeed, self.state.maxspeed)
+            let vy = noise(-self.state.maxspeed, self.state.maxspeed)
+            position.x = self.state.position.x + x + vx
+            position.y = self.state.position.y + y + vy
+            //console.log('Moving: from', self.state.position, ' to' , position)
+        } 
+        return { position }
     }
 }
-
 class Replicate extends Module {
     constructor() {
         super()
     }
 
     spin(self) {
+        // if replicate -> result is copy of dna (state)
         // log('Replicating!')
         return self.dna.copy()
     }

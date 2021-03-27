@@ -37,29 +37,38 @@ class Agent {
 class RandomAgent {
     constructor() {
         this.name = uuidv4()
-        this.action_space = 0
         this.creature = null
     }
 
     sample() {
-        return randint(0, this.action_space)
+        let choice = randint(0, this.creature.action_space.length)
+        let params = this.parameterize(this.creature.action_space[choice][1])
+        return  {choice, params}
+    }
+
+    parameterize(amount){
+        let params = []
+        // fill each parameter with a random integer 
+        while(amount > params.length) {
+            params.push(randint(-2,2))
+        }
+        return params
     }
 
     spin() {
-        send({ action: this.sample(), actor: this.name, creature: this.creature })
+        let step = { action: this.sample(), actor: this.name, creature: this.creature.name }
+        log(step)
+        send(step)
     }
 
     reset() {
         listen(msg => {
             if (msg.creature && msg.actor === this.name) {
                 log(`Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
-                this.creature = msg.creature.name
-                this.action_space = msg.creature.action_space
+                this.creature = msg.creature
             }
             if (isObservation(msg)) {
-                // this.creature.observations = msg
-
-                if (this.creature && !msg.find(creature => creature.name === this.creature)) {
+                if (this.creature && !msg.find(creature => creature.name === this.creature.name)) {
                     log('Creature Died: ' + this.creature)
                     this.creature = null
                 }
@@ -68,7 +77,6 @@ class RandomAgent {
         })
         register({ agent: this })
     }
-
 }
 
 module.exports = { Agent, RandomAgent }

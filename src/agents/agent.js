@@ -8,7 +8,7 @@ const { RandomAgent } = require('./agents')
 
 LOGGING = false
 
-let amount = 5
+let amount = 10
 let agents = []
 let rotations = 0
 
