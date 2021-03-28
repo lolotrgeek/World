@@ -55,17 +55,17 @@ class Move extends Module {
     }
     spin(self) {
         // if move -> result is the new position (state) -> result updates position
-        let position = {}
+        let position = self.state.position
 
         let x = self.params[0]
         let y = self.params[1]
 
-        if (x && y && self.state.position.x && self.state.position.y) {
+        if (x > 0 || y > 0) {
             let vx = noise(-self.state.maxspeed, self.state.maxspeed)
             let vy = noise(-self.state.maxspeed, self.state.maxspeed)
             position.x = self.state.position.x + x + vx
             position.y = self.state.position.y + y + vy
-            //console.log('Moving: from', self.state.position, ' to' , position)
+            console.log('Moving: from', self.state.position, ' to' , position)
         } 
         return { position }
     }

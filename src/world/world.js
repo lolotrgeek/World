@@ -33,8 +33,8 @@ class World {
     // set initial state of creature
     if (!b.state.position) b.state.position = { x: random(1000), y: random(1000) }
     if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
-    if (!b.state.radius) b.state.radius = Math.map(b.dna.genes[0], 0, 1, 0, 50)
-    if (!b.state.visual_space) b.state.visual_space = b.state.radius * 3 // observation limits
+    if (!b.state.skin) b.state.skin = Math.map(b.dna.genes[0], 0, 1, 0, 50)
+    if (!b.state.visual_space) b.state.visual_space = b.state.skin * 3 // observation limits
     if (!b.state.nearby) b.state.nearby = []
     return b
   }
@@ -90,10 +90,12 @@ class World {
         let module = b.modules[b.action]
         let result = module.spin(b)
         // add key/value of result to state object
-        Object.keys(result).forEach(key => b.state[key] = result[key])
+        let newstate = Object.keys(result)
+        if(newstate.length > 0) newstate.forEach(key => b.state[key] = result[key])
         let cost = this.cost() // TODO: environmental forces factored into cost 
         b.health -= cost
-        log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
+        // log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
+        console.log(result, b.state.position)
       }
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
@@ -147,7 +149,6 @@ class World {
             if (!found) {
               // log(obj.creature + ' not found!')
             }
-
             // log("action" + this.bloops[obj.creature])
             // log(this.bloops[obj.creature].health)
           }
@@ -155,7 +156,6 @@ class World {
         catch (err) {
           // log(err)
         }
-
       }
     })
     setInterval(() => {

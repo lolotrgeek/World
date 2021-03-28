@@ -40,32 +40,22 @@ class World {
     this.p.stroke(0, bloop.health)
     let color = bloop.phenotype
     this.p.fill(color.r, color.g, color.b, bloop.health)
-    this.p.ellipse(bloop.state.position.x, bloop.state.position.y, bloop.state.radius, bloop.state.radius)
+    this.p.ellipse(bloop.state.position.x, bloop.state.position.y, bloop.state.skin, bloop.state.skin)
   }
 
-  nearby(bloop, food) {
+  nearby(bloop) {
     let bloops = this.bloops.filter(other => {
-      let distance = p5.Vector.dist(bloop.state.position, other.state.position)
-      if (distance > bloop.skin && distance < bloop.state.visual_space) return true
+      // let distance = p5.Vector.dist(bloop.state.position, other.state.position)
+      let distance = this.p.int(this.p.dist(bloop.state.position.x, other.state.position.x, bloop.state.position.y, other.state.position.y))
+      if (distance > bloop.state.skin && distance < bloop.state.visual_space) return true
       else return false
     })
-    // map the food values 
-    let foodmap = food.map((foodLocation, i) => {
-      return [i, foodLocation]
-    })
-    // filter out not nearby food
-    let foods = foodmap.filter(nearbyfood => {
-      let foodLocation = nearbyfood[1]
-      let distance = p5.Vector.dist(bloop.state.position, foodLocation)
-      if (distance < bloop.state.visual_space) return true
-      else return false
-    })
-    return { foods, bloops }
+    return { bloops }
   }
 
   inside(bloop, thingLocation) {
     let distance = p5.Vector.dist(bloop.state.position, thingLocation)
-    if (distance < bloop.skin) return true
+    if (distance < bloop.state.skin) return true
     else return false
   }
 
@@ -76,11 +66,11 @@ class World {
     if (!b.state.maxspeed) {
       b.state.maxspeed = this.p.map(b.dna.genes[0], 0, 1, 15, 0)
     }
-    if (!b.state.radius) {
-      b.state.radius = this.p.map(b.dna.genes[0], 0, 1, 0, 50)
+    if (!b.state.skin) {
+      b.state.skin = this.p.map(b.dna.genes[0], 0, 1, 0, 50)
     }
     if (!b.state.visual_space) {
-      b.state.visual_space = b.state.radius * 3
+      b.state.visual_space = b.state.skin * 3
     }
     return b
   }
@@ -91,10 +81,10 @@ class World {
 
   spin() {
     this.bloops.forEach(bloop => {
-      let position = this.position(bloop)
-      this.wraparound(position, bloop.state.radius)
+      bloop.state.position = this.position(bloop)
+      this.wraparound(bloop.state.position, bloop.state.skin)
       this.display(bloop)
+      this.nearby(bloop)
     })
-    // ws.send(JSON.stringify(this.bloops))
   }
 }

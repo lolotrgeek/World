@@ -24,7 +24,7 @@ class Bloop {
 
     // state
     this.observations = []
-    this.action = 0 
+    this.action = 0
     this.params = []
     this.state = {}
   }

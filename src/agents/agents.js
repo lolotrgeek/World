@@ -57,7 +57,7 @@ class RandomAgent {
 
     spin() {
         let step = { action: this.sample(), actor: this.name, creature: this.creature.name }
-        log(step)
+        // log(step)
         send(step)
     }
 
@@ -72,7 +72,6 @@ class RandomAgent {
                     log('Creature Died: ' + this.creature)
                     this.creature = null
                 }
-                
             }
         })
         register({ agent: this })

@@ -29,7 +29,7 @@ function run() {
             }
         })
         rotations++
-    }, 500)
+    }, 100)
 
 }
 run()
