@@ -22,7 +22,7 @@ class World {
 
     if (attractions > 0) {
       this.p.fill('#fff')
-      this.p.text(nfc(attractions, 1), 0, -5)
+      this.p.text(this.p.nfc(attractions, 1), 0, -5)
     }
     this.p.pop()
   }
