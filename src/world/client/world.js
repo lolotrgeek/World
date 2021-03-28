@@ -8,7 +8,7 @@ class World {
   constructor({bloops, energy, ports }) {
     this.food = energy
     this.bloops = bloops
-    this.size = {x: 1000, y: 1000} // TODO: send through ports to visualize network space?
+    this.size = {x: 500, y: 500} // TODO: send through ports to visualize network space?
     this.p = null
   }
 
@@ -18,9 +18,9 @@ class World {
     this.p.fill(0)
     this.p.line(position.x, position.y, objective.x, objective.y)
     this.p.translate((position.x + objective.x) / 2, (position.y + objective.y) / 2)
-    this.p.rotate(p.atan2(objective.y - position.y, objective.x - position.x))
+    this.p.rotate(this.p.atan2(objective.y - position.y, objective.x - position.x))
 
-    if (attractions > fuzz) {
+    if (attractions > 0) {
       this.p.fill('#fff')
       this.p.text(nfc(attractions, 1), 0, -5)
     }
@@ -44,10 +44,12 @@ class World {
   }
 
   nearby(bloop) {
-    let bloops = this.bloops.filter(other => {
+    let bloops = this.bloops.forEach(other => {
       // let distance = p5.Vector.dist(bloop.state.position, other.state.position)
       let distance = this.p.int(this.p.dist(bloop.state.position.x, other.state.position.x, bloop.state.position.y, other.state.position.y))
-      if (distance > bloop.state.skin && distance < bloop.state.visual_space) return true
+      if (distance > bloop.state.skin && distance < bloop.state.visual_space) {
+        this.showdistance(bloop.state.position, other.state.position, bloop.attractions[0] - other.attractions[0])
+      }
       else return false
     })
     return { bloops }
@@ -57,22 +59,6 @@ class World {
     let distance = p5.Vector.dist(bloop.state.position, thingLocation)
     if (distance < bloop.state.skin) return true
     else return false
-  }
-
-  manifest(b) {
-    if (!b.state.position) {
-      b.state.position = {x : this.p.random(this.size.x), y: this.p.random(this.size.y)}
-    }
-    if (!b.state.maxspeed) {
-      b.state.maxspeed = this.p.map(b.dna.genes[0], 0, 1, 15, 0)
-    }
-    if (!b.state.skin) {
-      b.state.skin = this.p.map(b.dna.genes[0], 0, 1, 0, 50)
-    }
-    if (!b.state.visual_space) {
-      b.state.visual_space = b.state.skin * 3
-    }
-    return b
   }
 
   position(b) {

@@ -8,7 +8,8 @@ const { run, listen, broadcast } = require('../server')
 //TODO: when an agent connects, spawn a bloop for the agent to control
 
 class World {
-  constructor(energy, odds) {
+  constructor(energy=1000, odds=0.005, size={x:500, y: 500}) {
+    this.size = size
     this.odds = odds
     this.energy = energy
     this.bloops = []
@@ -31,7 +32,7 @@ class World {
   manifest(b) {
     // TODO: update position to reflect agent connection? (network space)
     // set initial state of creature
-    if (!b.state.position) b.state.position = { x: random(1000), y: random(1000) }
+    if (!b.state.position) b.state.position = { x: random(this.size.x), y: random(this.size.y) }
     if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
     if (!b.state.skin) b.state.skin = Math.map(b.dna.genes[0], 0, 1, 0, 50)
     if (!b.state.visual_space) b.state.visual_space = b.state.skin * 3 // observation limits
