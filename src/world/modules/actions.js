@@ -65,7 +65,7 @@ class Move extends Module {
             let vy = noise(-self.state.maxspeed, self.state.maxspeed)
             position.x = self.state.position.x + x + vx
             position.y = self.state.position.y + y + vy
-            console.log('Moving: from', self.state.position, ' to' , position)
+            // console.log('Moving: from', self.state.position, ' to' , position)
         } 
         return { position }
     }

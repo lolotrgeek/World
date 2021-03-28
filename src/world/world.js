@@ -79,7 +79,10 @@ class World {
   }
 
   cost() {
-    return random(0, 1)
+    // TODO: environmental forces factored into cost
+    let cost = random(0, 1)
+    this.energy += cost
+    return cost
   }
 
   step() {
@@ -90,13 +93,13 @@ class World {
         b.observations = this.bloops
         let module = b.modules[b.action]
         let result = module.spin(b)
-        // add key/value of result to state object
+        // update state : add key/value of result to state object
         let newstate = Object.keys(result)
         if(newstate.length > 0) newstate.forEach(key => b.state[key] = result[key])
-        let cost = this.cost() // TODO: environmental forces factored into cost 
+        let cost = this.cost()  
         b.health -= cost
         // log(`bloop: {name: ${b.name} , action: ${b.action}, module: ${module.constructor.name}, cost: ${cost}, health: ${b.health} `)
-        console.log(result, b.state.position)
+        console.log(this.energy)
       }
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
