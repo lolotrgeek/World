@@ -1,36 +1,52 @@
-require('../functions')
-// consumes a state and chooses an action from a given action space
-// this is a hardcoded agent, will later be replaced with a neural network.
+const { register, listen, send } = require('./utilities/client')
+const { v4: uuidv4 } = require('uuid')
 
-// TODO: connect to an environment, assume control of a spawned entity
+const isObservation = data => Array.isArray(data)
+const portGenerator = () => {
+    let ports = []
+    while (ports.length < 1000) {
+        let port = randint(10000, 20000)
+        if (ports.findint(port) === false) {
+            ports.push(port)
+        }
+    }
+    return ports
+}
 
-const { RandomAgent } = require('./agents')
-
-LOGGING = false
-
-let amount = 10
-let agents = []
-let rotations = 0
-
-function run() {
-    while (amount > agents.length) {
-        let agent = new RandomAgent()
-        agents.push(agent)
+class Agent {
+    constructor(dna_, energy) {
+        // features
+        this.dna = dna_
+        this.energy = energy
+        this.agents = []
+        this.ports = portGenerator()
     }
 
-    // TODO: multiprocess this...
-    agents.forEach(agent => agent.reset())
-    setInterval(() => {
-        agents.forEach((agent, i) => {
-            if (agent.creature !== null) agent.spin()
-            else if(rotations > 1) {
-                log(`Stopping Agent ${agent.name}`)
-                agents.splice(i, 1)
-            }
-        })
-        rotations++
-    }, 100)
+    distribute(energy) {
+        return randint(1, energy)
+    }
 
+    conserve(energy) {
+        this.energy = this.energy - energy
+    }
+
+    port() {
+        let choice = Array.choice(this.ports)
+        this.ports.remove(choice)
+        return choice
+    }
+
+    modulate(agent) {
+
+    }
+
+    spawn(energy) {
+        while (this.agents.length < this.amount) {
+            let agent = new Agent(actions)
+            agent.address = "ws://localhost:" + this.port()
+            this.agents.push(agent)
+        }
+    }
 }
-run()
 
+module.exports = { Agent }

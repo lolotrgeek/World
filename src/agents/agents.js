@@ -1,38 +1,6 @@
 const { register, listen, send } = require('./utilities/client')
 const { v4: uuidv4 } = require('uuid')
-
 const isObservation = data => Array.isArray(data)
-
-class Agent {
-    constructor(amount) {
-        this.amount = amount
-        this.agents = []
-        this.ports = []
-        // generate unique ports
-        while (this.ports.length < 1000) {
-            let port = randint(10000, 20000)
-            if (this.ports.findint(port) === false) {
-                this.ports.push(port)
-            }
-        }
-    }
-
-    port() {
-        let choice = Array.choice(this.ports)
-        this.ports.remove(choice)
-        return choice
-    }
-
-    create(actions) {
-        while (this.agents.length < this.amount) {
-            let agent = new Agent(actions)
-            agent.address = "ws://localhost:" + this.port()
-            this.agents.push(agent)
-        }
-    }
-
-
-}
 
 class RandomAgent {
     constructor() {
@@ -43,14 +11,14 @@ class RandomAgent {
     sample() {
         let choice = randint(0, this.creature.action_space.length)
         let params = this.parameterize(this.creature.action_space[choice][1])
-        return  {choice, params}
+        return { choice, params }
     }
 
-    parameterize(amount){
+    parameterize(amount) {
         let params = []
         // fill each parameter with a random integer 
-        while(amount > params.length) {
-            params.push(randint(-2,2))
+        while (amount > params.length) {
+            params.push(randint(-2, 2))
         }
         return params
     }
@@ -78,4 +46,4 @@ class RandomAgent {
     }
 }
 
-module.exports = { Agent, RandomAgent }
+module.exports = { RandomAgent }
