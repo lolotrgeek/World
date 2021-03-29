@@ -29,14 +29,15 @@ class Bloop {
     this.state = {}
   }
 
-  spin(action) {
-    this.act(action)
-  }
-
-  act(action) {
-    if (action.length === 2) {
-      // TODO: translate action called from agent into action by module
-    }
+  spin(observations, cost) {
+    this.observations = observations
+    let module = this.modules[this.action]
+    let result = module.spin(this)
+    // update state : add key/value of result to state object
+    let newstate = Object.keys(result)
+    if (newstate.length > 0) newstate.forEach(key => this.state[key] = result[key])
+    this.health -= cost
+    // log(`name:${this.name},action:${this.action},module:${module.constructor.name},cost:${cost},health:${this.health}`)
   }
 
   reset() {
