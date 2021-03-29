@@ -127,6 +127,14 @@ global.log = function log(msg) {
   }
 }
 
+global.isObject = function isObject(string) {
+  try {
+    return JSON.parse(string)
+  } catch (error) {
+    return false
+  }
+}
+
 const PERLIN_YWRAPB = 4
 const PERLIN_YWRAP = 1 << PERLIN_YWRAPB
 const PERLIN_ZWRAPB = 8
