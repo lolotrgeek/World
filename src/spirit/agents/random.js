@@ -2,10 +2,9 @@ const { register, listen, send } = require('../client/client')
 const isObservation = data => Array.isArray(data)
 
 class Agent {
-    constructor(dna_, energy) {
+    constructor(dna_) {
         //features
         this.dna = dna_
-        this.energy = energy
         this.name = null
 
         // spaces
@@ -22,8 +21,9 @@ class Agent {
     }
 
     sample() {
-        let choice = randint(0, this.creature.action_space.length)
-        let params = this.parameterize(this.creature.action_space[choice][1])
+        //TODO: sample internal action space 
+        let choice = randint(0, this.state.creature.action_space.length)
+        let params = this.parameterize(this.state.creature.action_space[choice][1])
         return { choice, params }
     }
 
@@ -37,29 +37,7 @@ class Agent {
     }
 
     step() {
-        return { action: this.sample(), actor: this.name, creature: this.creature.name }
-    }
-
-    spin() {
-        listen(msg => {
-            if (msg.creature && this.name === msg.creature.agent) {
-                log(`Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
-                this.state.creature = msg.creature
-            }
-            if (isObservation(msg)) {
-                if (this.state.creature && !msg.find(creature => creature.name === this.state.creature.name)) {
-                    log('Creature Died: ' + this.creature)
-                    this.creature = null
-                }
-            }
-        })        
-        setInterval(() => {
-            // TODO: reset action space by mapping modules
-            let step = this.step()
-            // log(step)
-            send(step)
-            this.state.rotations++
-        }, 100)
+        return { action: this.sample(), actor: this.name, creature: this.state.creature.name }
     }
 
     reset() {
@@ -67,7 +45,31 @@ class Agent {
         this.action_space = this.modules.map((module, slot) => [slot, module.params])
         this.observations = []
         register(this.name)
+
+        listen(msg => {
+            if (msg.creature && this.name === msg.creature.agent) {
+                log(`Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
+                this.state.creature = msg.creature
+            }
+            if (isObservation(msg)) {
+                if (this.state.creature && !msg.find(creature => creature.name === this.state.creature.name)) {
+                    log('Creature Died: ' + this.state.creature)
+                    this.state.creature = null
+                }
+            }
+        }) 
     }
+
+    spin() {
+       this.reset()
+        setInterval(() => {
+            // TODO: reset action space by mapping modules
+            let step = this.step()
+            // log(step)
+            send(step)
+            this.state.rotations++
+        }, 100)
+    }    
 }
 
 module.exports = { Agent }
