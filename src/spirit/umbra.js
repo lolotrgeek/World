@@ -2,11 +2,7 @@
 // ("agent land")
 
 // spawning agents and tracking used ports
-
-const { Agent } = require('./agents/random')
-const { DNA } = require('./agents/dna')
-
-const { v4: uuidv4 } = require('uuid')
+const { fork } = require('child_process')
 const { register, listen, send } = require('./client/client')
 
 const portGenerator = () => {
@@ -21,19 +17,9 @@ const portGenerator = () => {
 }
 
 class AgentLand {
-
-    constructor(energy) {
-        // features
-        this.energy = energy
+    constructor() {
         this.ports = portGenerator()
-    }
-
-    distribute(energy) {
-        return randint(1, energy)
-    }
-
-    conserve(energy) {
-        this.energy = this.energy - energy
+        this.children = []
     }
 
     port() {
@@ -42,39 +28,14 @@ class AgentLand {
         return choice
     }
 
-    manifest(agent) {
-        // set initial state of agent
-        if(!agent.state.address) agent.state.address = "ws://localhost:" + this.port()
-        if(!agent.state.world) agent.state.world = "ws://localhost:8888" 
-        if(!agent.state.rotations) agent.state.rotations = 0 
-        return agent
-    }
-
-    modulate(agent) {
-        // TODO: add local modules and creature modules to action space
-    }
-
-    spawn(energy) {
-        while (this.agents.length < this.amount) {
-            let dna = new DNA()
-            agent = this.manifest(this.modulate(new Agent(dna, energy)))
-            agent.name = uuidv4()
-            agent.reset()
-            //TODO: spawn a sub-process for agent
+    populate(amount) {
+        while (this.children.length < amount) {
+            const child = fork('run.js', [this.port()])
+            this.children.push(child)
         }
     }
-
-    parameterize(amount) {
-        let params = []
-        // fill each parameter with a random integer 
-        while (amount > params.length) {
-            params.push(randint(-2, 2))
-        }
-        return params
-    }
-
     step() {
-        
+
     }
 
     reset() {
@@ -82,9 +43,6 @@ class AgentLand {
     }
 
     spin() {
-        listen(msg => {
-            //TODO: listen for spawn requests
-        })
         this.reset()
     }
 
