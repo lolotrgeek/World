@@ -20,14 +20,25 @@ let clients = []
 function listen(callback) {
     // send...
     wsServer.on("connection", (ws, req) => {
+        addClient(ws)
         ws.on("message", (data) => parseMessage(ws, data, callback))
         ws.on("error", (error) => log("WebSocket error observed: " + error))
     })
 }
 
+/**
+ * Give ws client a name then add to client list
+ * @param {*} ws 
+ */
+function addClient(ws) {
+    if (!ws.name) {
+        ws.name = JSON.parse(data).name
+        clients.push(ws)
+    }
+}
+
 function parseMessage(ws, data, callback) {
     if (typeof data === 'string') {
-        clients.push(ws)
         let msg = callback(data)
         reply(ws, msg)
     }
@@ -51,11 +62,12 @@ function reply(ws, data) {
 
 /**
  * 
+ * @param {string} client name of client to send to
  * @param {*} data 
  */
-function send(data) {
+function send(client, data) {
     clients.forEach((ws, i) => {
-        if (clients[i] == ws && ws.readyState === 1) {
+        if (ws.name === client && clients[i] == ws && ws.readyState === 1) {
             log(data)
             ws.send(data)
         } else {

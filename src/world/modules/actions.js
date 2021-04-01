@@ -52,6 +52,7 @@ class Move extends Module {
     constructor() {
         super()
         this.params = 2 // let agent know spin has two params (x, y)
+        // params are an array of integers, here this.params lets the agent know the length of that array
     }
     spin(self) {
         // if move -> result is the new position (state) -> result updates position

@@ -5,6 +5,9 @@
 // Has more features for two parent mating (not used in this example)
 
 // Constructor (makes a random DNA)
+
+// dna -> genes
+// essence -> basis
 class DNA {
   constructor(newgenes) {
     if (newgenes) {

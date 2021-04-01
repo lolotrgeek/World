@@ -3,6 +3,7 @@
 const { Bloop } = require('./creatures/bloop')
 const { Module, Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
+
 const { run, listen, broadcast } = require('../server')
 
 class World {
@@ -49,6 +50,7 @@ class World {
   }
 
   spawn(health) {
+    // set initial features of creature
     log('Spawning: ' + health)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
@@ -81,19 +83,6 @@ class World {
     return cost
   }
 
-
-  step() {
-    this.bloops.forEachRev((b, i) => {
-      if (b.health < 0.0) {
-        this.bloops.splice(i, 1)
-      }
-      else if (b.action > 0) {
-        b.spin(this.bloops, this.cost(b.action))
-        b.reset()
-      }
-    })
-  }
-
   addCreature(obj) {
     if (this.energy > 0) {
       this.addAgent(obj.agent.name)
@@ -116,8 +105,8 @@ class World {
       let bloop = this.bloops[i]
       if (bloop.name === obj.creature) {
         // mutate found bloop with action
-        bloop.action = obj.action.choice
-        bloop.params = obj.action.params
+        bloop.action.choice = obj.action.choice
+        bloop.action.params = obj.action.params
         // log('found ' + obj.creature)
         found = bloop
         break
@@ -128,8 +117,22 @@ class World {
     }
   }
 
-  spin() {
-    run()
+  step() {
+    this.bloops.forEachRev((b, i) => {
+      if (b.health < 0.0) {
+        this.bloops.splice(i, 1)
+      }
+      else if (b.action > 0) {
+        b.spin(this.bloops, this.cost(b.action))
+        //TODO: send bloop observations to it's agent
+        send(b.observations)
+        b.reset()
+
+      }
+    })
+  }
+
+  reset() {
     listen(msg => {
       // log(msg)
       if (msg === "WORLD") {
@@ -138,16 +141,24 @@ class World {
       }
       else {
           let obj = isObject(msg)
-          if (obj && obj.agent) this.addCreature(obj)
-          else if (obj && obj.action.choice > 0 && obj.creature >= 0) this.setAction(obj)
+          if(obj) {
+            if (obj.agent) this.addCreature(obj)
+            else if (obj.action.choice > 0 && obj.creature >= 0) this.setAction(obj)
+          }
       }
     })
+  }
+
+  spin() {
+    run()
+    this.reset()
     setInterval(() => {
       this.step()
       // Observations:
       broadcast(JSON.stringify(this.bloops))
-    }, 500)
+    }, 100)
   }
+
 }
 
 module.exports = { World }
