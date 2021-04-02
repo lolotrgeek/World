@@ -99,22 +99,31 @@ class World {
     }
   }
 
-  setAction(obj) {
-    // Look for bloop that matches obj.creature
-    // TODO: either direct send, or seek by creature name (index)
+  findCreature(creature) {
+    // DEPRECATED
     let found = null
     for (let i = 0; i < this.bloops.length; i++) {
       let bloop = this.bloops[i]
-      if (bloop.name === obj.creature) {
+      if (bloop.name === creature) {
         // mutate found bloop with action
-        bloop.action.choice = obj.action.choice
-        bloop.action.params = obj.action.params
+
         // log('found ' + obj.creature)
         found = bloop
         break
       }
     }
-    if (!found) {
+    return found
+  }
+
+  setAction(obj) {
+    // Look for bloop that matches obj.creature
+
+    let bloop = this.bloops[obj.creature]
+    console.log('seeking', obj.creature, 'found' , bloop.name)
+    bloop.action.choice = obj.action.choice
+    bloop.action.params = obj.action.params
+
+    if (!bloop) {
       log(obj.creature + ' not found!')
     }
   }
