@@ -127,7 +127,7 @@ global.log = function log(msg) {
   }
 }
 
-global.isObject = function isObject(string) {
+global.getObject = function getObject(string) {
   try {
     return JSON.parse(string)
   } catch (error) {

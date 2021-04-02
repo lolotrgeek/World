@@ -26,7 +26,6 @@ function listen(callback) {
     })
 }
 
-
 /**
  * Send Data to Server
  * @param {object} data 

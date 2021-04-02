@@ -8,12 +8,14 @@ const { run, listen, broadcast, send } = require('../server')
 
 class World {
   constructor(energy = 1000, odds = 0.005, size = { x: 500, y: 500 }) {
+    this.speed = 100
     this.size = size
     this.odds = odds
     this.energy = energy
     this.bloops = []
     this.worlds = []
     this.agents = []
+    this.queue = [] // agents waiting for a creature to spawn
   }
 
   addAgent(agent) {
@@ -56,7 +58,6 @@ class World {
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
     bloop.name = this.bloops.length
-    this.bloops.push(bloop)
     return bloop
   }
 
@@ -83,82 +84,138 @@ class World {
     return cost
   }
 
-  addCreature(obj) {
-    let agent = obj.name
-    if (agent && this.energy > 0) {
-      this.addAgent(agent)
+  addCreature(agent) {
+    if (this.energy > 0) {
       let health = this.distribute(this.energy)
       let bloop = this.spawn(health)
       this.conserve(health)
       bloop.agent = agent
-      send(agent, JSON.stringify({ creature: bloop, agent: agent }))
-      console.log('energy' , this.energy)
+      this.bloops.push(bloop)
+      return bloop
     }
-    else {
-      send(agent, JSON.stringify({ creature: false }))
-    }
+    else return null
   }
 
+  /**
+   * 
+   * @param {number} creature the integer representing a creature
+   * @returns `{index, creature}`
+   */
   findCreature(creature) {
-    // DEPRECATED
-    let found = null
+    let found = { index: -1, creature: null }
     for (let i = 0; i < this.bloops.length; i++) {
       let bloop = this.bloops[i]
       if (bloop.name === creature) {
-        // mutate found bloop with action
-
-        // log('found ' + obj.creature)
-        found = bloop
+        found.creature = bloop
+        found.index = i
         break
       }
     }
     return found
   }
 
-  setAction(obj) {
-    // Look for bloop that matches obj.creature
-
-    let bloop = this.bloops[obj.creature]
-    console.log('seeking', obj.creature, 'found' , bloop.name)
-    bloop.action.choice = obj.action.choice
-    bloop.action.params = obj.action.params
-
-    if (!bloop) {
-      log(obj.creature + ' not found!')
+  /**
+   * 
+   * @param {number} creature the integer representing a creature
+   * @returns `{index, creature}`
+   */
+  seekCreature(creature) {
+    if (!creature || creature < 0) {
+      log(`No Creature ${creature}`)
+      return null
+    }
+    else {
+      let sought = { index: -1, creature: null }
+      let bloop
+      if (this.bloops[creature]) {
+        log(`Seeking creature ${creature}, found ${bloop.name}`)
+        bloop = this.bloops[creature]
+        sought.creature = bloop
+        sought.index = creature
+      }
+      else if (bloop && bloop.name !== creature) {
+        log(`Seeking creature ${creature}, found wrong ${bloop.name}`)
+        sought = this.findCreature(creature)
+      }
+      else if (!bloop) {
+        log(`Seeking creature ${creature} not found`)
+      }
+      return sought
     }
   }
 
+  /**
+   * 
+   * @param {number} action integer that corresponds with action
+   * @returns `{}` | `{action}`
+   */
+  setAction(action) {
+    if (action) {
+      action.last_action = Date.now()
+      return action
+    } else {
+      return {}
+    }
+  }
+
+
   step() {
+    // check for agents waiting for a creature
+    this.queue.forEachRev(agent => {
+      let bloop = this.addCreature(agent)
+      let response = { creature: bloop, agent: agent }
+      if (bloop) this.addAgent(agent)
+      send(agent, JSON.stringify(response))
+    })
+
     this.bloops.forEachRev((b, i) => {
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
+        log(`Creature ${b.name} Died from 0 Health.`)
+      }
+      // Make sure we have a new action for this step, otherwise assume agent died...
+      else if (Date.now() - b.action.last_action > this.speed * 2) {
+        this.bloops.splice(i, 1)
+        this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
+        log(`Creature ${b.name} Died from No agent.`)
       }
       else if (b.action > 0) {
         b.spin(this.bloops, this.cost(b.action))
-        //TODO: send bloop observations to it's agent
-        // send(b.observations)
-
-        send(this.bloops)
+        //TODO: segment observation using Look module
+        send(b.observations)
         b.reset()
 
       }
+      this.queue = [] // clearing queue ensures that only living agents will be re-added next step
     })
   }
 
   reset() {
     listen(msg => {
-      // log(msg)
+      // listen for world renderers
       if (msg === "WORLD") {
-        this.addWorld("WORLD") // TODO: add uuid for worlds, live reloading
+        this.addWorld("WORLD") // TODO: add uuid for worlds and live reloading
         return JSON.stringify({ world: this })
       }
+      // listen for agent messages
       else {
-          let obj = isObject(msg)
-          if(obj) {
-            if (obj.name) this.addCreature(obj)
-            else if (obj.action && obj.action.choice > 0 && obj.creature >= 0) this.setAction(obj)
-            else log(obj)
+        let obj = getObject(msg)
+        if (obj) {
+          // handle new or returning agents
+          if (obj.name) {
+            if (this.agents.find(agent => agent !== obj.name)) {
+              // put new agent in queue
+              this.queue.push(obj.name)
+            } 
           }
+          // handle action messages
+          else if (obj.action && obj.creature) {
+            let creature = this.seekCreature(obj.creature)
+            let action = this.setAction(obj.action)
+            this.bloops[creature.index].action = action
+          }
+          else log(obj)
+        }
       }
     })
   }
@@ -168,7 +225,7 @@ class World {
     this.reset()
     setInterval(() => {
       this.step()
-    }, 100)
+    }, this.speed)
   }
 
 }

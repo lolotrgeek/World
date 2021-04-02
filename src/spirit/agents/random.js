@@ -16,7 +16,7 @@ class Agent {
 
         // state
         this.observations = []
-        this.action = {choice: 0, params: []}
+        this.action = { choice: 0, params: [] }
         this.state = {}
     }
 
@@ -37,11 +37,15 @@ class Agent {
     }
 
     step() {
-        return { action: this.sample(), actor: this.name, creature: this.state.creature.name }
+        if (this.state.creature) {
+            return { action: this.sample(), actor: this.name, creature: this.state.creature.name }
+        } else {
+            return {name: this.name} // request a new creature
+        }
     }
 
     reset() {
-        this.action = {choice: 0, params: []}
+        this.action = { choice: 0, params: [] }
         this.action_space = this.modules.map((module, slot) => [slot, module.params])
         this.observations = []
         register(this.name)
@@ -57,11 +61,11 @@ class Agent {
                     this.state.creature = null
                 }
             }
-        }) 
+        })
     }
 
     spin() {
-       this.reset()
+        this.reset()
         setInterval(() => {
             // TODO: reset action space by mapping modules
             let step = this.step()
@@ -69,7 +73,7 @@ class Agent {
             send(step)
             this.state.rotations++
         }, 100)
-    }    
+    }
 }
 
 module.exports = { Agent }
