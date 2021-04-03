@@ -22,7 +22,7 @@ function listen(callback) {
     // send...
     wsServer.on("connection", (ws, req) => {
         ws.on("message", data => parseMessage(ws, data, callback))
-        ws.on("error", error => log(`${tag} WebSocket error observed: ${error}` ))
+        ws.on("error", error => log(`${tag} WebSocket error observed: ${error}`))
     })
 }
 
@@ -33,7 +33,7 @@ function listen(callback) {
 function addClient(ws, data) {
     if (!ws.name) {
         let obj = getObject(data)
-        ws.name = obj && obj.name ? obj.name : data 
+        ws.name = obj && obj.name ? obj.name : data
         clients.push(ws)
         log(`${tag} CLIENT ${clients.length} CONNECTED`)
     }
@@ -58,7 +58,7 @@ function broadcast(msg) {
 }
 
 function reply(ws, data) {
-    if(typeof data === 'string') {
+    if (typeof data === 'string') {
         ws.send(data)
     }
 }
@@ -70,9 +70,11 @@ function reply(ws, data) {
  */
 function send(client, data) {
     clients.forEach((ws, i) => {
-        if (ws.name === client && clients[i] == ws && ws.readyState === 1) {
-            log(`${tag} Sending: ${data}`, 0)
-            ws.send(data)
+        if (clients[i] == ws && ws.readyState === 1) {
+            if (ws.name === client) {
+                log(`${tag} Sending: ${data}`, 0)
+                ws.send(data)
+            }
         } else {
             log(`${tag} CLIENT ${i} DISCONNECTED`)
             clients.splice(i, 1)
