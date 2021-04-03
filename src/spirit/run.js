@@ -23,7 +23,6 @@ function modulate(agent) {
 function spawn() {
     agent = manifest(modulate(new Agent(new DNA())))
     agent.name = uuidv4()
-    agent.reset()
 }
 
 spawn()

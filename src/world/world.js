@@ -225,7 +225,8 @@ class World {
           }
           // handle unknown messages
           else {
-            log(`${tag} Unknown: ${obj}`)
+            // log(`${tag} Unknown: ${JSON.stringify(obj)}`)
+            log(`${tag} Unknown: ${obj.creature}`)
           }
         }
       }

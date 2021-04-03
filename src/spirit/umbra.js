@@ -5,6 +5,8 @@
 const { fork } = require('child_process')
 const { register, listen, send } = require('./client/client')
 
+const tag = "[Umbra]"
+
 const portGenerator = () => {
     let ports = []
     while (ports.length < 1000) {
@@ -32,6 +34,7 @@ class AgentLand {
         while (this.children.length < amount) {
             const child = fork('run.js', [this.port()])
             this.children.push(child)
+            log(`${tag} Spawning Child - PID: ${child.pid}`)
         }
     }
     step() {
