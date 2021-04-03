@@ -121,12 +121,11 @@ class World {
    * @returns `{index, creature}`
    */
   seekCreature(creature) {
-    if (!creature || creature < 0) {
+    let sought = { index: -1, creature: null }
+    if (typeof creature !== 'number' || creature < 0) {
       log(`${tag} No Creature ${creature}`)
-      return null
     }
     else {
-      let sought = { index: -1, creature: null }
       let bloop
       if (this.bloops[creature]) {
         bloop = this.bloops[creature]
@@ -141,8 +140,8 @@ class World {
       else if (!bloop) {
         log(`${tag} Seeking creature ${creature} not found`, 0)
       }
-      return sought
     }
+    return sought
   }
 
   /**
@@ -215,7 +214,7 @@ class World {
           }
           // Handle Actions messages
           // action message { action: {choice: int, params: []}, agent: string, creature: number }
-          else if (obj.action && obj.creature) {
+          else if (obj.action) {
             let found = this.seekCreature(obj.creature)
             let creature = this.bloops[found.index]
             let action = this.setAction(obj.action)
@@ -225,8 +224,7 @@ class World {
           }
           // handle unknown messages
           else {
-            // log(`${tag} Unknown: ${JSON.stringify(obj)}`)
-            log(`${tag} Unknown: ${obj.creature}`)
+            log(`${tag} Unknown: ${JSON.stringify(obj)}`)
           }
         }
       }
