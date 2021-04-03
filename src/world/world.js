@@ -4,8 +4,6 @@ const { Bloop } = require('./creatures/bloop')
 const { Module, Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 
-const { v4: uuidv4 } = require('uuid')
-
 const { run, listen, broadcast, send } = require('../server')
 const tag = "[World]"
 
@@ -171,24 +169,25 @@ class World {
 
     this.bloops.forEachRev((b, i) => {
       if (b.health < 0.0) {
+        send(b.agent, {dead: b})
         this.bloops.splice(i, 1)
         log(`${tag} Creature ${b.name} Died from 0 Health.`)
-        send(b.agent, {dead: b})
       }
       // Handle Actions
       // action: { choice: int, params: [], last_action: int }
       // Make sure we have a new action for this step, otherwise assume agent died...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
+        send(b.agent, {dead: b})
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.name} Died from No agent.`)
-        send(b.agent, {dead: b})
       }
       // Perform observation and action
       else if (b.action.choice > 0) {
-        log(`${tag} Creature Action ${b.action.choice}`)
+        log(`${tag} Creature Action ${b.action.choice}`, 0)
+        let full_observation = this.bloops.filter((bloop, index) => index !== i)
         //TODO: segment observation using Look module
-        b.spin(this.bloops, this.cost(b.action.choice))
+        b.spin(full_observation, this.cost(b.action.choice))
         send(b.agent, b.observations)
         b.reset()
 
@@ -223,8 +222,12 @@ class World {
             let found = this.seekCreature(obj.creature)
             let action = this.setAction(obj.action)
             // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
-            // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- bloop uuid and matching 
-            this.bloops[found.index].action = action
+            // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
+            let creature = this.bloops[found.index]
+            if(creature.health > 0 && creature.agent === obj.agent) {
+              log(`${tag} Action assigment: ${creature.health} ${creature.agent}`)
+              this.bloops[found.index].action = action
+            }
             // modify message in the following...
             log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`,0 )
            
