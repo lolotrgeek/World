@@ -41,7 +41,7 @@ class Agent {
     step() {
         let msg
         if (this.state.creature) {
-            msg = { action: this.sample(), actor: this.name, creature: this.state.creature.name }
+            msg = { action: this.sample(), agent: this.name, creature: this.state.creature.name }
         } else {
             msg = {name: this.name} // request a new creature
         }
@@ -76,7 +76,6 @@ class Agent {
         setInterval(() => {
             // TODO: reset action space by mapping modules
             this.step()
-            // log(step)
             this.state.rotations++
         }, 100)
     }

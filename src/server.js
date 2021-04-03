@@ -35,6 +35,7 @@ function addClient(ws, data) {
         let obj = getObject(data)
         ws.name = obj && obj.name ? obj.name : data 
         clients.push(ws)
+        log(`${tag} CLIENT ${clients.length} CONNECTED`)
     }
 }
 

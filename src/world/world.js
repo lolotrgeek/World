@@ -117,7 +117,7 @@ class World {
 
   /**
    * 
-   * @param {number} creature the integer representing a creature
+   * @param {number} creature the integer representing a creature's name
    * @returns `{index, creature}`
    */
   seekCreature(creature) {
@@ -159,7 +159,6 @@ class World {
     }
   }
 
-
   step() {
     // check for agents waiting for a creature
     this.queue.forEachRev(agent => {
@@ -174,15 +173,18 @@ class World {
         this.bloops.splice(i, 1)
         log(`${tag} Creature ${b.name} Died from 0 Health.`)
       }
+      // Handle Actions
+      // action: { choice: int, params: [], last_action: int }
       // Make sure we have a new action for this step, otherwise assume agent died...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.name} Died from No agent.`)
       }
-      else if (b.action > 0) {
-        b.spin(this.bloops, this.cost(b.action))
+      // Perform observation and action
+      else if (b.action.choice > 0) {
         //TODO: segment observation using Look module
+        b.spin(this.bloops, this.cost(b.action.choice))
         send(b.observations)
         b.reset()
 
@@ -202,7 +204,8 @@ class World {
       else {
         let obj = getObject(msg)
         if (obj) {
-          // handle new or returning Agents
+          // Handle new or returning Agent messages
+          // agent message { name: string}
           if (obj.name) {
             let found = this.agents.find(agent => agent === obj.name)
             if (!found) {
@@ -210,13 +213,15 @@ class World {
               this.queue.push(obj.name)
             }
           }
-          // handle Actions
+          // Handle Actions messages
+          // action message { action: {choice: int, params: []}, agent: string, creature: number }
           else if (obj.action && obj.creature) {
             let found = this.seekCreature(obj.creature)
+            let creature = this.bloops[found.index]
             let action = this.setAction(obj.action)
             // modify message in the following...
-            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`)
-            this.bloops[found.index].action = action
+            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
+            // LEFT HERE TO FIX DEAD CREATURES GETTING ACTIONS...
           }
           // handle unknown messages
           else {
@@ -230,9 +235,7 @@ class World {
   spin() {
     run()
     this.reset()
-    setInterval(() => {
-      this.step()
-    }, this.speed)
+    setInterval(() => this.step(), this.speed)
   }
 }
 
