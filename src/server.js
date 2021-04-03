@@ -32,7 +32,8 @@ function listen(callback) {
  */
 function addClient(ws, data) {
     if (!ws.name) {
-        ws.name = JSON.parse(data).name
+        let obj = getObject(data)
+        ws.name = obj && obj.name ? obj.name : data 
         clients.push(ws)
     }
 }
