@@ -116,17 +116,21 @@ global.randint = function randint(min, max) {
   return Math.floor(Math.random() * (max - min) + min)
 }
 
-global.log = function log(msg) {
+/**
+ * 
+ * @param {string} msg - string to log
+ * @param {number} level - `0` hide logs, ` default - 1` show logs
+ */
+global.log = function log(msg, level=1) {
   if (LOGGING === true) {
     let entry = '\n' + `[${new Date().toLocaleString()}] - ${msg}`
     fs.appendFile('./logs/serverlog.txt', entry, (err) => {
       if (err) console.log(err);
     });
-  } else {
+  } else if(LOGGING === false && level === 1) {
     console.log(msg)
   }
 }
-
 global.getObject = function getObject(string) {
   try {
     return JSON.parse(string)

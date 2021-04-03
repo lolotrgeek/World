@@ -1,5 +1,6 @@
 const WebSocket = require("ws")
 
+const tag = "[Client]"
 const WS_URL = 'ws:///localhost:8888'
 let ws = new WebSocket(WS_URL)
 
@@ -9,7 +10,7 @@ let ws = new WebSocket(WS_URL)
  */
 function register(name) {
     ws.on('open', function open() {
-        console.log(`Connected to ${WS_URL}`)
+        console.log(`${tag} ${name} connected to ${WS_URL}`)
         ws.send(JSON.stringify({name}))
     })
 }

@@ -5,6 +5,7 @@ const { Module, Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 
 const { run, listen, broadcast, send } = require('../server')
+const tag = "[World]"
 
 class World {
   constructor(energy = 1000, odds = 0.005, size = { x: 500, y: 500 }) {
@@ -20,13 +21,13 @@ class World {
 
   addAgent(agent) {
     this.agents.push(agent)
-    log("AGENT ADDED")
+    log(`${tag} AGENT ADDED`)
     return
   }
 
   addWorld(world) {
     this.worlds.push(world)
-    log("WORLD ADDED")
+    log(`${tag} WORLD ADDED`)
     return
   }
 
@@ -53,7 +54,7 @@ class World {
 
   spawn(health) {
     // set initial features of creature
-    log('Spawning: ' + health)
+    log(`${tag} Spawning : ${health}`)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
@@ -121,24 +122,24 @@ class World {
    */
   seekCreature(creature) {
     if (!creature || creature < 0) {
-      log(`No Creature ${creature}`)
+      log(`${tag} No Creature ${creature}`)
       return null
     }
     else {
       let sought = { index: -1, creature: null }
       let bloop
       if (this.bloops[creature]) {
-        log(`Seeking creature ${creature}, found ${bloop.name}`)
         bloop = this.bloops[creature]
+        log(`${tag} Seeking creature ${creature}, found ${bloop.name}`, 0)
         sought.creature = bloop
         sought.index = creature
       }
       else if (bloop && bloop.name !== creature) {
-        log(`Seeking creature ${creature}, found wrong ${bloop.name}`)
+        log(`${tag} Seeking creature ${creature}, found wrong ${bloop.name}`, 0)
         sought = this.findCreature(creature)
       }
       else if (!bloop) {
-        log(`Seeking creature ${creature} not found`)
+        log(`${tag} Seeking creature ${creature} not found`, 0)
       }
       return sought
     }
@@ -171,13 +172,13 @@ class World {
     this.bloops.forEachRev((b, i) => {
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
-        log(`Creature ${b.name} Died from 0 Health.`)
+        log(`${tag} Creature ${b.name} Died from 0 Health.`)
       }
       // Make sure we have a new action for this step, otherwise assume agent died...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
-        log(`Creature ${b.name} Died from No agent.`)
+        log(`${tag} Creature ${b.name} Died from No agent.`)
       }
       else if (b.action > 0) {
         b.spin(this.bloops, this.cost(b.action))
@@ -201,20 +202,26 @@ class World {
       else {
         let obj = getObject(msg)
         if (obj) {
-          // handle new or returning agents
+          // handle new or returning Agents
           if (obj.name) {
-            if (this.agents.find(agent => agent !== obj.name)) {
-              // put new agent in queue
+            let found = this.agents.find(agent => agent === obj.name)
+            if (!found) {
+              log(`${tag} Adding agent ${obj.name} to queue.`, 0)
               this.queue.push(obj.name)
-            } 
+            }
           }
-          // handle action messages
+          // handle Actions
           else if (obj.action && obj.creature) {
-            let creature = this.seekCreature(obj.creature)
+            let found = this.seekCreature(obj.creature)
             let action = this.setAction(obj.action)
-            this.bloops[creature.index].action = action
+            // modify message in the following...
+            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`)
+            this.bloops[found.index].action = action
           }
-          else log(obj)
+          // handle unknown messages
+          else {
+            log(`${tag} Unknown: ${obj}`)
+          }
         }
       }
     })
@@ -227,7 +234,6 @@ class World {
       this.step()
     }, this.speed)
   }
-
 }
 
 module.exports = { World }

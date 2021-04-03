@@ -1,6 +1,8 @@
 const { register, listen, send } = require('../client/client')
 const isObservation = data => Array.isArray(data)
 
+const tag = "[Agent]"
+
 class Agent {
     constructor(dna_) {
         //features
@@ -37,30 +39,35 @@ class Agent {
     }
 
     step() {
+        let msg
         if (this.state.creature) {
-            return { action: this.sample(), actor: this.name, creature: this.state.creature.name }
+            msg = { action: this.sample(), actor: this.name, creature: this.state.creature.name }
         } else {
-            return {name: this.name} // request a new creature
+            msg = {name: this.name} // request a new creature
         }
+        send(msg)
     }
 
     reset() {
+        // clear values
         this.action = { choice: 0, params: [] }
         this.action_space = this.modules.map((module, slot) => [slot, module.params])
         this.observations = []
+        // connect to world
         register(this.name)
-
+        // wait for a creature to spawn... listen for confirmation, then listen for observations
         listen(msg => {
             if (msg.creature && this.name === msg.creature.agent) {
-                log(`Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
                 this.state.creature = msg.creature
             }
             if (isObservation(msg)) {
                 if (this.state.creature && !msg.find(creature => creature.name === this.state.creature.name)) {
-                    log('Creature Died: ' + this.state.creature)
+                    log(`${tag} Creature Died:  ${this.state.creature}`)
                     this.state.creature = null
                 }
             }
+            //TODO: handle waiting in queue? other than resending name?
         })
     }
 
@@ -68,9 +75,8 @@ class Agent {
         this.reset()
         setInterval(() => {
             // TODO: reset action space by mapping modules
-            let step = this.step()
+            this.step()
             // log(step)
-            send(step)
             this.state.rotations++
         }, 100)
     }

@@ -7,8 +7,9 @@ app.use(cors())
 
 const WS_PORT = 8888
 const HTTP_PORT = 8000
+const tag = "[Server]"
 
-const wsServer = new WebSocket.Server({ port: WS_PORT }, () => log(`WS Server is listening at ${WS_PORT}`))
+const wsServer = new WebSocket.Server({ port: WS_PORT }, () => log(`${tag} WS is listening at ${WS_PORT}`))
 
 let clients = []
 
@@ -21,7 +22,7 @@ function listen(callback) {
     // send...
     wsServer.on("connection", (ws, req) => {
         ws.on("message", data => parseMessage(ws, data, callback))
-        ws.on("error", error => log("WebSocket error observed: " + error))
+        ws.on("error", error => log(`${tag} WebSocket error observed: ${error}` ))
     })
 }
 
@@ -68,10 +69,10 @@ function reply(ws, data) {
 function send(client, data) {
     clients.forEach((ws, i) => {
         if (ws.name === client && clients[i] == ws && ws.readyState === 1) {
-            log(data)
+            log(`${tag} Sending: ${data}`, 0)
             ws.send(data)
         } else {
-            log(`CLIENT ${i} DISCONNECTED`)
+            log(`${tag} CLIENT ${i} DISCONNECTED`)
             clients.splice(i, 1)
         }
     })
@@ -84,7 +85,7 @@ function run() {
     app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sockets.js")))
     app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sketch.js")))
     app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/world.js")))
-    app.listen(HTTP_PORT, () => log(`HTTP server listening at ${HTTP_PORT}`))
+    app.listen(HTTP_PORT, () => log(`${tag} HTTP listening at ${HTTP_PORT}`))
 }
 
 module.exports = { run, listen, reply, broadcast, send }
