@@ -1,5 +1,4 @@
 const { register, listen, send } = require('../client/client')
-const isObservation = data => Array.isArray(data)
 
 const tag = "[Agent]"
 
@@ -8,6 +7,7 @@ class Agent {
         //features
         this.dna = dna_
         this.name = null
+        this.speed = 100
 
         // spaces
         this.action_space = []
@@ -39,12 +39,19 @@ class Agent {
     }
 
     step() {
+        // Check for a non-responsive server
+        // TODO: parameterize death timeout, add retry?
+        if(Date.now() - this.state.last_message > this.speed * 1000) {
+            log(`${tag} lost message, dying.`)
+            process.exit()// TODO: maybe initiate a retry sequence?
+        }
         let msg
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.name }
         } else {
             msg = {name: this.name} // request a new creature
         }
+        log(`${tag} Step: ${JSON.stringify(msg)}`)
         send(msg)
     }
 
@@ -54,15 +61,19 @@ class Agent {
         this.action_space = this.modules.map((module, slot) => [slot, module.params])
         this.observations = []
         // connect to world
+        // TODO: handle disconnects, make this more robust
         register(this.name)
         // wait for a creature to spawn... listen for confirmation, then listen for observations
         listen(msg => {
-            if (msg.creature && this.name === msg.creature.agent) {
+            this.state.last_message = Date.now()
+            // handle creature assignment
+            // assignment : {creature: object, agent: string}
+            if (msg.creature && this.name === msg.agent) {
                 log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
                 this.state.creature = msg.creature
             }
-            if (isObservation(msg)) {
-                if (this.state.creature && !msg.find(creature => creature.name === this.state.creature.name)) {
+            if (msg.dead) {
+                if (msg.dead.agent === this.name) {
                     log(`${tag} Creature Died:  ${this.state.creature}`)
                     this.state.creature = null
                 }
@@ -75,9 +86,9 @@ class Agent {
         this.reset()
         setInterval(() => {
             // TODO: reset action space by mapping modules
+            log(`${tag} State - ${this.name}: ${this.state.creature}`, 0)
             this.step()
-            this.state.rotations++
-        }, 100)
+        }, this.speed)
     }
 }
 

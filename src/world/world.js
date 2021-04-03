@@ -4,6 +4,8 @@ const { Bloop } = require('./creatures/bloop')
 const { Module, Look, Move, Replicate } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 
+const { v4: uuidv4 } = require('uuid')
+
 const { run, listen, broadcast, send } = require('../server')
 const tag = "[World]"
 
@@ -171,6 +173,7 @@ class World {
       if (b.health < 0.0) {
         this.bloops.splice(i, 1)
         log(`${tag} Creature ${b.name} Died from 0 Health.`)
+        send(b.agent, {dead: b})
       }
       // Handle Actions
       // action: { choice: int, params: [], last_action: int }
@@ -179,12 +182,14 @@ class World {
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.name} Died from No agent.`)
+        send(b.agent, {dead: b})
       }
       // Perform observation and action
       else if (b.action.choice > 0) {
+        log(`${tag} Creature Action ${b.action.choice}`)
         //TODO: segment observation using Look module
         b.spin(this.bloops, this.cost(b.action.choice))
-        send(b.observations)
+        send(b.agent, b.observations)
         b.reset()
 
       }
@@ -216,11 +221,13 @@ class World {
           // action message { action: {choice: int, params: []}, agent: string, creature: number }
           else if (obj.action) {
             let found = this.seekCreature(obj.creature)
-            let creature = this.bloops[found.index]
             let action = this.setAction(obj.action)
+            // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
+            // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- bloop uuid and matching 
+            this.bloops[found.index].action = action
             // modify message in the following...
-            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
-            // LEFT HERE TO FIX DEAD CREATURES GETTING ACTIONS...
+            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`,0 )
+           
           }
           // handle unknown messages
           else {
