@@ -2,6 +2,7 @@
 // Create a "bloop" creature
 // NOTE: a creature is an environment
 
+const tag = "[Bloop]"
 
 class Bloop {
   constructor(dna_, health) {
@@ -28,17 +29,17 @@ class Bloop {
 
   spin(observations, cost) {
     this.observations = observations
-    let module = this.modules[this.action]
+    let module = this.modules[this.action.choice]
     let result = module.spin(this)
     // update state : add key/value of result to state object
     let newstate = Object.keys(result)
     if (newstate.length > 0) newstate.forEach(key => this.state[key] = result[key])
     this.health -= cost
-    // log(`name:${this.name},action:${this.action},module:${module.constructor.name},cost:${cost},health:${this.health}`)
+    log(`${tag} ${this.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}, health:${this.health}`)
   }
 
   reset() {
-    this.action = {choice: 0, params: []}
+    // this.action = {choice: 0, params: []} // retain last action in order to determine if agent is still sending new actions
     this.action_space = this.modules.map((module, slot) => [slot, module.params])
     this.observations = []
   }

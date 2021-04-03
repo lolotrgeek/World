@@ -55,11 +55,12 @@ class Move extends Module {
         // params are an array of integers, here this.params lets the agent know the length of that array
     }
     spin(self) {
+        // TODO: consider passing only needed vars, not entire self...
         // if move -> result is the new position (state) -> result updates position
         let position = self.state.position
 
-        let x = self.params[0]
-        let y = self.params[1]
+        let x = self.action.params[0]
+        let y = self.action.params[1]
 
         if (x > 0 || y > 0) {
             let vx = noise(-self.state.maxspeed, self.state.maxspeed)
