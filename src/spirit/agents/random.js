@@ -41,19 +41,19 @@ class Agent {
     step() {
         // Check for a non-responsive server
         // TODO: parameterize death timeout, add retry?
-        if(Date.now() - this.state.last_message > this.speed * 1000) {
-            log(`${tag} lost message, dying.`)
-            // TODO: initiate a retry sequence?
-            // process.exit()
-        }
+        // if(Date.now() - this.state.last_message > this.speed * 1000) {
+        //     log(`${tag} lost message, dying.`)
+        //     // TODO: initiate a retry sequence?
+        //     // process.exit()
+        // }
         let msg
+        log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0) 
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.name }
             log(`${tag} Action Step: ${JSON.stringify(msg)}`, 0)
         } else {
             msg = {name: this.name} // request a new creature
             log(`${tag} Request Step: ${JSON.stringify(msg)}`, 0)
-
         }
         
         send(msg)
@@ -73,19 +73,21 @@ class Agent {
             // handle creature assignment
             // assignment : {creature: object, agent: string}
             if (msg.creature && this.name === msg.agent) {
-                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.name}`)
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.name}`, 0)
                 this.state.creature = msg.creature
             }
             if (msg.dead) {
                 if (msg.dead.agent === this.name) {
-                    log(`${tag} Creature Died:  ${this.state.creature}`)
+                    log(`${tag} Creature Died:  ${this.state.creature}`, 0)
                     this.state.creature = null
                 }
             }
             if(msg.state) {
                 if(typeof msg.state === 'object') {
                     log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, 0)
-                    this.observations = msg.state}
+                    this.observations = msg.state
+                    // TODO: keep record of observations or only use newest?
+                }
             }
             //TODO: handle waiting in queue? other than resending name?
         })

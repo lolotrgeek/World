@@ -21,7 +21,7 @@ class World {
 
   addAgent(agent) {
     this.agents.push(agent)
-    log(`${tag} AGENT ADDED`)
+    log(`${tag} AGENT ADDED`, 0)
     return
   }
 
@@ -36,7 +36,7 @@ class World {
     if (!b.state.position) b.state.position = { x: random(this.size.x), y: random(this.size.y) }
     if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
     if (!b.state.skin) b.state.skin = Math.map(b.dna.genes[0], 0, 1, 0, 50)
-    if (!b.state.visual_space) b.state.visual_space = b.state.skin * 3 // observation limits
+    if (!b.state.visual_space) b.state.visual_space = b.state.skin * 5 // observation limits
     if (!b.state.nearby) b.state.nearby = []
     return b
   }
@@ -54,7 +54,7 @@ class World {
 
   spawn(health) {
     // set initial features of creature
-    log(`${tag} Spawning : ${health}`)
+    log(`${tag} Spawning : ${health}`, 0)
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
@@ -161,7 +161,7 @@ class World {
   step() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
-      log(`${tag} Agent Waiting, Energy ${this.energy}`)
+      log(`${tag} Agent Waiting, Energy ${this.energy}`, 0 )
       let bloop = this.addCreature(agent)
       let response = { creature: bloop, agent: agent }
       if (bloop) {
@@ -176,7 +176,7 @@ class World {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
-        log(`${tag} Creature ${b.name} Died from 0 Health. Energy ${this.energy}`)
+        log(`${tag} Creature ${b.name} Died from 0 Health. Energy ${this.energy}`, 0)
       }
       // Handle Actions
       // action: { choice: int, params: [], last_action: int }
@@ -185,7 +185,7 @@ class World {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
-        log(`${tag} Creature ${b.name} Died from No agent. Energy ${this.energy}`)
+        log(`${tag} Creature ${b.name} Died from No agent. Energy ${this.energy}`, 0)
       }
       // Perform action, send observation
       else if (b.action.choice > 0) {
@@ -216,7 +216,7 @@ class World {
           if (obj.name) {
             let found = this.agents.find(agent => agent === obj.name)
             if (!found) {
-              log(`${tag} Adding agent ${obj.name} to queue.`, 1)
+              log(`${tag} Adding agent ${obj.name} to queue.`, 0)
               this.queue.push(obj.name)
             }
           }

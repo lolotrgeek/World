@@ -21,12 +21,13 @@ class Look extends Module {
         // if look -> result is "nearby" creatures (state)
         // TODO: make this a NN that learns "attention".
         let result = self.observations.filter(observation => {
-            if (observation.x <= self.state.visual_space && observation.y <= self.state.visual_space) {
+            if (observation.state.position.x <= self.state.visual_space && observation.state.position.y <= self.state.visual_space) {
+                // console.log('Nearby:', observation.name)
                 return true
             } else return false
-        })
+        }).map(observation => ({nearby : observation.state.position})) // TODO: cannot send entire state (circular), what to send?
 
-        // console.log('Saw: ', result)
+        console.log('Saw: ', result)
         return { nearby: result }
     }
 }
