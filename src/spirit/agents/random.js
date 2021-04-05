@@ -48,10 +48,13 @@ class Agent {
         let msg
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.name }
+            log(`${tag} Action Step: ${JSON.stringify(msg)}`, 0)
         } else {
             msg = {name: this.name} // request a new creature
+            log(`${tag} Request Step: ${JSON.stringify(msg)}`, 0)
+
         }
-        log(`${tag} Step: ${JSON.stringify(msg)}`, 0 )
+        
         send(msg)
     }
 

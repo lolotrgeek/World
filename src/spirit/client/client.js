@@ -4,7 +4,7 @@ const ReconnectingWebSocket = require("reconnecting-websocket")
 const tag = "[Client]"
 const WS_URL = 'ws:///localhost:8888'
 const options = {
-    WebSocket: WS, // custom WebSocket constructor
+    WebSocket: WS,
     connectionTimeout: 1000,
     maxRetries: 10,
 };
@@ -12,20 +12,18 @@ let ws = new ReconnectingWebSocket(WS_URL, [], options)
 
 ws.on = (event, listener) => ws.addEventListener(event, listener)
 
-
-ws.on('error', error => {
-    log(`${tag} WebSocket error observed: ${error.message}`)
-})
+ws.on('error', error => log(`${tag} WebSocket error observed: ${error.message}, retrying ${ws.retryCount}`))
+ws.on("close", reason => log(`${tag} WebSocket Closed, retrying ${ws.retryCount}`))
 
 /**
  * Let server know who is here.
  * @param {object} name needs to have a name
  */
 function register(name) {
-    ws.on('open', function open() {
+    ws.onopen = () => {
         console.log(`${tag} ${name} connected to ${WS_URL}`)
         ws.send(JSON.stringify({ name }))
-    })
+    }
 }
 
 /**
@@ -33,13 +31,11 @@ function register(name) {
  * @param {function} callback 
  */
 function listen(callback) {
-    ws.on('message', function incoming(data) {
-        if (typeof data === 'string') {
-            callback(JSON.parse(data))
+    ws.onmessage = message =>  {
+        if (typeof message.data === 'string') {
+            callback(JSON.parse(message.data))
         }
-    })
-    // TODO: implement closed retries?
-    ws.on("close", reason => log(`${tag} WebSocket Closed ${reason}`))
+    }
 }
 
 /**

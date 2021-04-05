@@ -43,7 +43,7 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Move()]
+    let modules = [new Module(), new Look(), new Move()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
