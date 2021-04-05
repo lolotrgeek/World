@@ -160,10 +160,14 @@ class World {
 
   step() {
     // check for agents waiting for a creature
-    this.queue.forEachRev(agent => {
+    this.queue.forEachRev((agent, i) => {
+      log(`${tag} Agent Waiting, Energy ${this.energy}`)
       let bloop = this.addCreature(agent)
       let response = { creature: bloop, agent: agent }
-      if (bloop) this.addAgent(agent)
+      if (bloop) {
+        this.addAgent(agent)
+        this.queue.splice(i,1)
+      }
       send(agent, JSON.stringify(response))
     })
 
@@ -171,7 +175,8 @@ class World {
       if (b.health < 0.0) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
-        log(`${tag} Creature ${b.name} Died from 0 Health.`)
+        this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
+        log(`${tag} Creature ${b.name} Died from 0 Health. Energy ${this.energy}`)
       }
       // Handle Actions
       // action: { choice: int, params: [], last_action: int }
@@ -179,8 +184,8 @@ class World {
       else if (Date.now() - b.action.last_action > this.speed * 2) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
-        this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
-        log(`${tag} Creature ${b.name} Died from No agent.`)
+        this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
+        log(`${tag} Creature ${b.name} Died from No agent. Energy ${this.energy}`)
       }
       // Perform observation and action
       else if (b.action.choice > 0) {
@@ -212,7 +217,7 @@ class World {
           if (obj.name) {
             let found = this.agents.find(agent => agent === obj.name)
             if (!found) {
-              log(`${tag} Adding agent ${obj.name} to queue.`, 0)
+              log(`${tag} Adding agent ${obj.name} to queue.`, 1)
               this.queue.push(obj.name)
             }
           }
