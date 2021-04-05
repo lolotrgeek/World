@@ -187,13 +187,12 @@ class World {
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.name} Died from No agent. Energy ${this.energy}`)
       }
-      // Perform observation and action
+      // Perform action, send observation
       else if (b.action.choice > 0) {
         log(`${tag} Creature Action ${b.action.choice}`, 0)
         let full_observation = this.bloops.filter((bloop, index) => index !== i)
-        //TODO: segment observation using Look module
         b.spin(full_observation, this.cost(b.action.choice))
-        send(b.agent, b.observations)
+        send(b.agent, {state: b.state})
         b.reset()
 
       }

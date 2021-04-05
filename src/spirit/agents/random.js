@@ -43,7 +43,8 @@ class Agent {
         // TODO: parameterize death timeout, add retry?
         if(Date.now() - this.state.last_message > this.speed * 1000) {
             log(`${tag} lost message, dying.`)
-            process.exit()// TODO: maybe initiate a retry sequence?
+            // TODO: initiate a retry sequence?
+            // process.exit()
         }
         let msg
         if (this.state.creature) {
@@ -80,6 +81,11 @@ class Agent {
                     log(`${tag} Creature Died:  ${this.state.creature}`)
                     this.state.creature = null
                 }
+            }
+            if(msg.state) {
+                if(typeof msg.state === 'object') {
+                    log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, 0)
+                    this.observations = msg.state}
             }
             //TODO: handle waiting in queue? other than resending name?
         })

@@ -19,12 +19,12 @@ class Bloop {
 
     // modules
     this.slots = 4
-    this.modules = []
+    this.modules = [] // see modulate() in ./src/world/world.js for initial modules
 
     // state
     this.observations = []
     this.action = { choice: 0, params: [] }
-    this.state = {}
+    this.state = {} // see manifest() in ./src/world/world.js for initial state
   }
 
   spin(observations, cost) {
