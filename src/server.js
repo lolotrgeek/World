@@ -37,7 +37,7 @@ function addClient(ws, data) {
         let obj = getObject(data)
         ws.name = obj && obj.name ? obj.name : data
         clients.push(ws)
-        log(`${tag} CLIENT ${clients.length} CONNECTED`)
+        log(`${tag} CLIENT "${ws.name}" CONNECTED`)
     }
 }
 
@@ -91,6 +91,7 @@ function run() {
     app.get("/sockets.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sockets.js")))
     app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/sketch.js")))
     app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "./world/client/world.js")))
+    app.get("/reconnecting-websocket.js", (req, res) => res.sendFile(path.resolve(__dirname, "../node_modules/reconnecting-websocket/dist/reconnecting-websocket-iife.js")))
     app.listen(HTTP_PORT, () => log(`${tag} HTTP listening at ${HTTP_PORT}`))
 }
 

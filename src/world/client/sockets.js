@@ -1,5 +1,9 @@
 const WS_URL = 'ws:///localhost:8888'
-let ws = new WebSocket(WS_URL)
+options = {
+    connectionTimeout: 1000,
+    maxRetries: 10,
+}
+let ws = new ReconnectingWebSocket(WS_URL, [], options)
 
 ws.onopen = () => {
     console.log(`Connected to ${WS_URL}`)
@@ -12,4 +16,13 @@ function listen(callback) {
             callback(JSON.parse(message.data))
         }
     }
+    ws.onerror = () => {
+        console.log(`Error ${WS_URL}`)
+        callback("CLOSED")
+    }
+    
+    ws.onclose = () => {
+        console.log(`Disconnected from ${WS_URL}`)
+        callback("CLOSED")
+    }    
 }

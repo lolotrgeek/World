@@ -37,8 +37,15 @@ function startsketch() {
 
   let myp5 = new p5(sketch)
 }
+function stopsketch() {
+  console.log('stopping')
+  world.p.remove()
+}
 
 listen(msg => {
   if (Array.isArray(msg)) world.bloops = msg
   else if (typeof msg === 'object' && typeof msg.world === 'object') createworld(msg)
+  else if (msg === "CLOSED") {
+    stopsketch()
+  }
 })
