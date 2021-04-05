@@ -1,7 +1,7 @@
 const WS_URL = 'ws:///localhost:8888'
 options = {
     connectionTimeout: 1000,
-    maxRetries: 10,
+    // maxRetries: 10,
 }
 let ws = new ReconnectingWebSocket(WS_URL, [], options)
 
