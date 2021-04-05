@@ -43,7 +43,7 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Look(), new Move()]
+    let modules = [new Module(), new Move()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
@@ -169,7 +169,7 @@ class World {
 
     this.bloops.forEachRev((b, i) => {
       if (b.health < 0.0) {
-        send(b.agent, {dead: b})
+        send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         log(`${tag} Creature ${b.name} Died from 0 Health.`)
       }
@@ -177,7 +177,7 @@ class World {
       // action: { choice: int, params: [], last_action: int }
       // Make sure we have a new action for this step, otherwise assume agent died...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
-        send(b.agent, {dead: b})
+        send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.find(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.name} Died from No agent.`)
@@ -224,13 +224,13 @@ class World {
             // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
             // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
             let creature = this.bloops[found.index]
-            if(creature.health > 0 && creature.agent === obj.agent) {
-              log(`${tag} Action assigment: ${creature.health} ${creature.agent}`)
+            if (creature && creature.health > 0 && creature.agent === obj.agent) {
+              log(`${tag} Action assigment: ${creature.health} ${creature.agent}`, 0)
               this.bloops[found.index].action = action
             }
             // modify message in the following...
-            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`,0 )
-           
+            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
+
           }
           // handle unknown messages
           else {
@@ -244,7 +244,13 @@ class World {
   spin() {
     run()
     this.reset()
-    setInterval(() => this.step(), this.speed)
+    setInterval(() => {
+      this.step()
+      if (this.worlds.length > 0) {
+        //TODO: uuid worlds for multiple, iterate through each to send 
+        send("WORLD" , JSON.stringify(this.bloops))
+      }
+    }, this.speed)
   }
 }
 

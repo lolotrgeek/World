@@ -72,7 +72,7 @@ function send(client, data) {
     clients.forEach((ws, i) => {
         if (clients[i] == ws && ws.readyState === 1) {
             if (ws.name === client) {
-                log(`${tag} Sending: ${data}`, 1)
+                log(`${tag} Sending: ${data}`, 0)
                 ws.send(typeof data === 'object' ? JSON.stringify(data) : data )
             }
         } else {

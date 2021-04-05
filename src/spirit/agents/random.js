@@ -51,7 +51,7 @@ class Agent {
         } else {
             msg = {name: this.name} // request a new creature
         }
-        log(`${tag} Step: ${JSON.stringify(msg)}`)
+        log(`${tag} Step: ${JSON.stringify(msg)}`, 0 )
         send(msg)
     }
 

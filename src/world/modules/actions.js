@@ -62,13 +62,16 @@ class Move extends Module {
         let x = self.action.params[0]
         let y = self.action.params[1]
 
+        // console.log('Params: ', self.action.params)
+
         if (x > 0 || y > 0) {
             let vx = noise(-self.state.maxspeed, self.state.maxspeed)
             let vy = noise(-self.state.maxspeed, self.state.maxspeed)
-            position.x = self.state.position.x + x + vx
-            position.y = self.state.position.y + y + vy
-            // console.log('Moving: from', self.state.position, ' to' , position)
-        } 
+            
+            position = {x: self.state.position.x + x + vx, y: self.state.position.y + y + vy}
+        }
+        // if (position !== self.state.position) console.log('Moving: from', self.state.position, ' to', position)
+        // else console.log('Same ', position)
         return { position }
     }
 }
