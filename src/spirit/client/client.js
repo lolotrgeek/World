@@ -1,8 +1,21 @@
-const WebSocket = require("ws")
+const WS = require('ws')
+const ReconnectingWebSocket = require("reconnecting-websocket")
 
 const tag = "[Client]"
 const WS_URL = 'ws:///localhost:8888'
-let ws = new WebSocket(WS_URL)
+const options = {
+    WebSocket: WS, // custom WebSocket constructor
+    connectionTimeout: 1000,
+    maxRetries: 10,
+};
+let ws = new ReconnectingWebSocket(WS_URL, [], options)
+
+ws.on = (event, listener) => ws.addEventListener(event, listener)
+
+
+ws.on('error', error => {
+    log(`${tag} WebSocket error observed: ${error.message}`)
+})
 
 /**
  * Let server know who is here.
@@ -11,7 +24,7 @@ let ws = new WebSocket(WS_URL)
 function register(name) {
     ws.on('open', function open() {
         console.log(`${tag} ${name} connected to ${WS_URL}`)
-        ws.send(JSON.stringify({name}))
+        ws.send(JSON.stringify({ name }))
     })
 }
 
@@ -25,6 +38,8 @@ function listen(callback) {
             callback(JSON.parse(data))
         }
     })
+    // TODO: implement closed retries?
+    ws.on("close", reason => log(`${tag} WebSocket Closed ${reason}`))
 }
 
 /**

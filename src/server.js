@@ -23,6 +23,8 @@ function listen(callback) {
     wsServer.on("connection", (ws, req) => {
         ws.on("message", data => parseMessage(ws, data, callback))
         ws.on("error", error => log(`${tag} WebSocket error observed: ${error}`))
+        // TODO: implement closed retries?
+        ws.on("close", reason => log(`${tag} WebSocket Closed ${reason}`))
     })
 }
 
