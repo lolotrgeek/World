@@ -1,7 +1,7 @@
 // A Proxy for Reality
 
 const { Bloop } = require('./creatures/bloop')
-const { Module, Look, Move, Replicate } = require('./modules/actions')
+const { Module, Look, Move, Select } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 
 const { run, listen, broadcast, send } = require('../server')
@@ -34,8 +34,8 @@ class World {
   manifest(b) {
     // set initial state of creature
     if (!b.state.position) b.state.position = { x: random(this.size.x), y: random(this.size.y) }
-    if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.dna.genes[0], 0, 1, 15, 0)
-    if (!b.state.skin) b.state.skin = Math.map(b.dna.genes[0], 0, 1, 0, 50)
+    if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.features.dna.genes[0], 0, 1, 15, 0)
+    if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50)
     if (!b.state.visual_space) b.state.visual_space = b.state.skin * 5 // observation limits
     if (!b.state.nearby) b.state.nearby = []
     return b
@@ -43,7 +43,7 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Look(), new Move()]
+    let modules = [new Module(), new Look(), new Select(), new Move()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
@@ -58,7 +58,7 @@ class World {
     let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
-    bloop.name = this.bloops.length
+    bloop.features.name = this.bloops.length
     return bloop
   }
 
@@ -106,7 +106,7 @@ class World {
     let found = { index: -1, creature: null }
     for (let i = 0; i < this.bloops.length; i++) {
       let bloop = this.bloops[i]
-      if (bloop.name === creature) {
+      if (bloop.features.name === creature) {
         found.creature = bloop
         found.index = i
         break
@@ -129,12 +129,12 @@ class World {
       let bloop
       if (this.bloops[creature]) {
         bloop = this.bloops[creature]
-        log(`${tag} Seeking creature ${creature}, found ${bloop.name}`, 0)
+        log(`${tag} Seeking creature ${creature}, found ${bloop.features.name}`, 0)
         sought.creature = bloop
         sought.index = creature
       }
-      else if (bloop && bloop.name !== creature) {
-        log(`${tag} Seeking creature ${creature}, found wrong ${bloop.name}`, 0)
+      else if (bloop && bloop.features.name !== creature) {
+        log(`${tag} Seeking creature ${creature}, found wrong ${bloop.features.name}`, 0)
         sought = this.findCreature(creature)
       }
       else if (!bloop) {
@@ -172,11 +172,11 @@ class World {
     })
 
     this.bloops.forEachRev((b, i) => {
-      if (b.health < 0.0) {
+      if (b.features.health < 0.0) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
-        log(`${tag} Creature ${b.name} Died from 0 Health. Energy ${this.energy}`, 0)
+        log(`${tag} Creature ${b.features.name} Died from 0 Health. Energy ${this.energy}`, 0)
       }
       // Handle Actions
       // action: { choice: int, params: [], last_action: int }
@@ -185,12 +185,12 @@ class World {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
-        log(`${tag} Creature ${b.name} Died from No agent. Energy ${this.energy}`, 0)
+        log(`${tag} Creature ${b.features.name} Died from No agent. Energy ${this.energy}`, 0)
       }
       // Perform action, send observation
       else if (b.action.choice > 0) {
         log(`${tag} Creature Action ${b.action.choice}`, 0)
-        let full_observation = this.bloops.filter((bloop, index) => index !== i)
+        let full_observation = this.bloops.filter((bloop, index) => index !== i) // filter out self from observation
         b.spin(full_observation, this.cost(b.action.choice))
         send(b.agent, {state: b.state})
         b.reset()
@@ -228,8 +228,8 @@ class World {
             // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
             // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
             let creature = this.bloops[found.index]
-            if (creature && creature.health > 0 && creature.agent === obj.agent) {
-              log(`${tag} Action assigment: ${creature.health} ${creature.agent}`, 0)
+            if (creature && creature.features.health > 0 && creature.agent === obj.agent) {
+              log(`${tag} Action assigment: ${creature.features.health} ${creature.agent}`, 0)
               this.bloops[found.index].action = action
             }
             // modify message in the following...

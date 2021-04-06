@@ -37,9 +37,9 @@ class World {
 
   display(bloop) {
     this.p.ellipseMode(this.p.CENTER)
-    this.p.stroke(0, bloop.health)
-    let color = bloop.phenotype
-    this.p.fill(color.r, color.g, color.b, bloop.health)
+    this.p.stroke(0, bloop.features.health)
+    let color = bloop.features.phenotype
+    this.p.fill(color.r, color.g, color.b, bloop.features.health)
     this.p.ellipse(bloop.state.position.x, bloop.state.position.y, bloop.state.skin, bloop.state.skin)
   }
 
@@ -48,7 +48,7 @@ class World {
       // let distance = p5.Vector.dist(bloop.state.position, other.state.position)
       let distance = this.p.int(this.p.dist(bloop.state.position.x, other.state.position.x, bloop.state.position.y, other.state.position.y))
       if (distance > bloop.state.skin && distance < bloop.state.visual_space) {
-        this.showdistance(bloop.state.position, other.state.position, bloop.attractions[0] - other.attractions[0])
+        this.showdistance(bloop.state.position, other.state.position, bloop.features.attractions[0] - other.features.attractions[0])
       }
       else return false
     })

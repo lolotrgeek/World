@@ -47,9 +47,11 @@ class Agent {
         //     // process.exit()
         // }
         let msg
-        log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0) 
+        if(this.observations.length > 0) {
+            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0) 
+        }
         if (this.state.creature) {
-            msg = { action: this.sample(), agent: this.name, creature: this.state.creature.name }
+            msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
             log(`${tag} Action Step: ${JSON.stringify(msg)}`, 0)
         } else {
             msg = {name: this.name} // request a new creature
@@ -73,7 +75,7 @@ class Agent {
             // handle creature assignment
             // assignment : {creature: object, agent: string}
             if (msg.creature && this.name === msg.agent) {
-                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.name}`, 0)
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 0)
                 this.state.creature = msg.creature
             }
             if (msg.dead) {

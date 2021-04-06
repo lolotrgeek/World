@@ -25,27 +25,10 @@ class Look extends Module {
                 // console.log('Nearby:', observation.name)
                 return true
             } else return false
-        }).map(observation => ({nearby : observation.state.position})) // TODO: cannot send entire state (circular), what to send?
+        }).map(observation => observation.features) 
 
-        console.log('Saw: ', result)
+        // if(result.length > 0) console.log('Saw: ', result)
         return { nearby: result }
-    }
-}
-
-class Select extends Module {
-    constructor() { super() }
-
-    spin(self) {
-        let others = params
-        // select a mate by attractiveness
-        let potentials = others.filter(other => {
-            let attraction = Math.abs(self.attractions[0] - other.dna.genes[0])
-            // ignore un-attractive...
-            return attraction > self.fuzz ? true : false
-        })
-        // select the most attractive
-        let selection = Array.max(potentials)
-        return { 'selection': selection }
     }
 }
 
@@ -76,6 +59,29 @@ class Move extends Module {
         return { position }
     }
 }
+
+
+class Select extends Module {
+    constructor() { 
+        super()
+    }
+
+    spin(self) {
+        let others = self.state.nearby
+        let threshold = 0
+        // select a mate by attractiveness
+        let potentials = others.filter(other => {
+            let attraction = Math.abs(self.attractions[0] - other.dna.genes[0])
+            // ignore un-attractive...
+            return attraction > threshold ? true : false
+        })
+        // select the most attractive
+        let selection = Array.max(potentials)
+        if (selection > 0) console.log("Selection", selection)
+        return { selection }
+    }
+}
+
 class Replicate extends Module {
     constructor() {
         super()
@@ -88,4 +94,4 @@ class Replicate extends Module {
     }
 }
 
-module.exports = { Module, Look, Move, Replicate }
+module.exports = { Module, Look, Move, Select }
