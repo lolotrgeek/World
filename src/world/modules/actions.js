@@ -68,16 +68,21 @@ class Select extends Module {
 
     spin(self) {
         let others = self.state.nearby
-        let threshold = 0
-        // select a mate by attractiveness
-        let potentials = others.filter(other => {
-            let attraction = Math.abs(self.attractions[0] - other.dna.genes[0])
-            // ignore un-attractive...
-            return attraction > threshold ? true : false
+        let threshold = 0.01
+        // score others by attractiveness
+        let potentials = others.map(other => {
+            // determine attraction
+            let attraction = Math.abs(self.features.attractions[0] - other.dna.genes[0])
+            // console.log('Attraction', attraction)
+            return {attraction, other}
         })
+        console.log(potentials)
+        let attractions = potentials.map(potential => potential.attraction).filter(attraction => attraction > threshold)
+        // console.log(attractions)
         // select the most attractive
-        let selection = Array.max(potentials)
-        if (selection > 0) console.log("Selection", selection)
+        let selected = Array.max(attractions)
+        let selection = potentials.find(potential => potential.attraction === selected)
+        if(selection) console.log("Selection", selection)
         return { selection }
     }
 }
