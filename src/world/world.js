@@ -53,10 +53,9 @@ class World {
     return b
   }
 
-  spawn(health) {
+  spawn(health, dna=new DNA()) {
     // set initial features of creature
     log(`${tag} Spawning : ${health}`, 0)
-    let dna = new DNA()
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
     bloop.features.name = this.bloops.length
@@ -191,7 +190,43 @@ class World {
       else {
         // Handle State
         if (b.state) {
-          if (b.state.selection && Object.keys(b.state.selection).length > 0) console.log('Selection:', b.state.selection)
+          if (b.state.selection && Object.keys(b.state.selection).length > 0) {
+            // console.log('Selection:', b.state.selection)
+            // selection {mate: {creature.features}, payment: {int}}
+            
+            // Asexual
+            let childfeatures = {
+              dna: b.features.dna.mutate(0.2),
+              health: b.state.selection.payment
+            }
+            
+            // NOTE: parent pays health, even if no child gets spawned!
+            if (this.queue.length > 0) {
+              //randomly pick an agent from the queue
+              let chosen = randint(this.queue.length)
+              let agent = this.queue[chosen]
+              let child = this.spawn(childfeatures.health, childfeatures.dna)
+              // conserve - paid health of parent into child health
+              b.features.health -= b.state.selection.payment
+              // modified addCreature sequence
+              child.agent = agent
+              this.bloops.push(child)
+              let response = { creature: child, agent: agent }
+              if (child) {
+                this.addAgent(agent)
+                this.queue.splice(chosen, 1)
+              }
+              send(agent, JSON.stringify(response))
+            }
+
+
+
+            // Sexual
+            // TODO: decide if mating is reciprocal
+            // upon selection this sends reproduction request to creature by name
+            // let mate = this.seekCreature(b.state.selection.mate.name)
+            // the creature then sends this mate request to agent...
+          }
         }
         // Handle Actions
         // action: { choice: int, params: [], last_action: int }

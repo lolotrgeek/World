@@ -64,9 +64,12 @@ class Move extends Module {
 class Select extends Module {
     constructor() { 
         super()
+        this.params = 1
     }
 
     spin(self) {
+        let payment = self.action.params[0]
+
         let others = self.state.nearby
         let threshold = 0.01
         // score others by attractiveness
@@ -79,7 +82,8 @@ class Select extends Module {
         let attractions = potentials.map(potential => potential.attraction).filter(attraction => attraction > threshold)
         // select the most attractive
         let selected = Array.max(attractions)
-        let selection = potentials.find(potential => potential.attraction === selected)
+        let select = potentials.find(potential => potential.attraction === selected)
+        let selection = select && select.other ? {mate: select.other, payment} : select
         // if(selection) console.log("Selection", selection)
         return { selection }
     }

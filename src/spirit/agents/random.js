@@ -32,6 +32,7 @@ class Agent {
     parameterize(amount) {
         let params = []
         // fill each parameter with a random integer 
+        // eventually this is a decision for a NN
         while (amount > params.length) {
             params.push(randint(-2, 2))
         }
@@ -48,7 +49,8 @@ class Agent {
         // }
         let msg
         if(this.observations.length > 0) {
-            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0) 
+            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0 ) 
+            log(`${tag} Observation Step: ${JSON.stringify(this.observations[0].nearby)}`, 0) 
         }
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
@@ -59,6 +61,7 @@ class Agent {
         }
         
         send(msg)
+        this.observations = [] // only remember last observation  
     }
 
     reset() {
@@ -67,7 +70,6 @@ class Agent {
         this.action_space = this.modules.map((module, slot) => [slot, module.params])
         this.observations = []
         // connect to world
-        // TODO: handle disconnects, make this more robust
         register(this.name)
         // wait for a creature to spawn... listen for confirmation, then listen for observations
         listen(msg => {
@@ -87,8 +89,7 @@ class Agent {
             if(msg.state) {
                 if(typeof msg.state === 'object') {
                     log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, 0)
-                    this.observations = msg.state
-                    // TODO: keep record of observations or only use newest?
+                    this.observations.push(msg.state)
                 }
             }
             //TODO: handle waiting in queue? other than resending name?
