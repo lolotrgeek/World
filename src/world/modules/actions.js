@@ -76,13 +76,11 @@ class Select extends Module {
             // console.log('Attraction', attraction)
             return {attraction, other}
         })
-        console.log(potentials)
         let attractions = potentials.map(potential => potential.attraction).filter(attraction => attraction > threshold)
-        // console.log(attractions)
         // select the most attractive
         let selected = Array.max(attractions)
         let selection = potentials.find(potential => potential.attraction === selected)
-        if(selection) console.log("Selection", selection)
+        // if(selection) console.log("Selection", selection)
         return { selection }
     }
 }

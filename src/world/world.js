@@ -38,6 +38,7 @@ class World {
     if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50)
     if (!b.state.visual_space) b.state.visual_space = b.state.skin * 5 // observation limits
     if (!b.state.nearby) b.state.nearby = []
+    if (!b.state.selection) b.state.selection = {}
     return b
   }
 
@@ -161,43 +162,50 @@ class World {
   step() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
-      log(`${tag} Agent Waiting, Energy ${this.energy}`, 0 )
+      log(`${tag} Agent Waiting, Energy ${this.energy}`, 0)
       let bloop = this.addCreature(agent)
       let response = { creature: bloop, agent: agent }
       if (bloop) {
         this.addAgent(agent)
-        this.queue.splice(i,1)
+        this.queue.splice(i, 1)
       }
       send(agent, JSON.stringify(response))
     })
 
     this.bloops.forEachRev((b, i) => {
+      // Handle Death from natural causes
       if (b.features.health < 0.0) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.features.name} Died from 0 Health. Energy ${this.energy}`, 0)
       }
-      // Handle Actions
-      // action: { choice: int, params: [], last_action: int }
-      // Make sure we have a new action for this step, otherwise assume agent died...
+      // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
         log(`${tag} Creature ${b.features.name} Died from No agent. Energy ${this.energy}`, 0)
       }
-      // Perform action, send observation
-      else if (b.action.choice > 0) {
-        log(`${tag} Creature Action ${b.action.choice}`, 0)
-        let full_observation = this.bloops.filter((bloop, index) => index !== i) // filter out self from observation
-        b.spin(full_observation, this.cost(b.action.choice))
-        send(b.agent, {state: b.state})
-        b.reset()
-
+      // Not Dead!
+      else {
+        // Handle State
+        if (b.state) {
+          if (b.state.selection && Object.keys(b.state.selection).length > 0) console.log('Selection:', b.state.selection)
+        }
+        // Handle Actions
+        // action: { choice: int, params: [], last_action: int }
+        // Perform action, send observation
+        if (b.action.choice > 0) {
+          log(`${tag} Creature Action ${b.action.choice}`, 0)
+          let full_observation = this.bloops.filter((bloop, index) => index !== i) // filter out self from observation
+          b.spin(full_observation, this.cost(b.action.choice))
+          send(b.agent, { state: b.state })
+          b.reset()
+        }
       }
-      this.queue = [] // clearing queue ensures that only living agents will be re-added next step
     })
+    this.queue = [] // clearing queue ensures that only living agents will be re-added next step
   }
 
   reset() {
@@ -252,7 +260,7 @@ class World {
       this.step()
       if (this.worlds.length > 0) {
         //TODO: uuid worlds for multiple, iterate through each to send 
-        send("WORLD" , JSON.stringify(this.bloops))
+        send("WORLD", JSON.stringify(this.bloops))
       }
     }, this.speed)
   }
