@@ -4,7 +4,7 @@ const { Bloop } = require('./creatures/bloop')
 const { Module, Look, Move, Select } = require('./modules/actions')
 const { DNA } = require('./creatures/dna')
 
-const { run, listen, broadcast, send } = require('../server')
+const { listen, broadcast, send } = require('../server')
 const tag = "[World]"
 
 class World {
@@ -291,7 +291,6 @@ class World {
   }
 
   spin() {
-    run()
     this.reset()
     setInterval(() => {
       this.step()

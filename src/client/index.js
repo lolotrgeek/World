@@ -4,6 +4,7 @@ let world
 
 let agents = []
 let creatures = []
+let cnv
 
 listen(msg => {
     if (Array.isArray(msg)) {
@@ -18,6 +19,12 @@ listen(msg => {
         let found = agents.findIndex(agent => agent.agent === msg.agent)
         if(found > -1) agents.splice(found, 1)
         agents.push(msg)
+    }
+    else if(typeof msg === 'object' && msg.name) {
+        agentdiv.innerText = "Agents" + JSON.stringify(agents)
+        let found = agents.findIndex(agent => agent.agent === msg.name)
+        if(found > -1) agents.splice(found, 1)
+        agents.push(msg)        
     }
     else if (typeof msg === 'object' && typeof msg.world === 'object') {
         world = createworld(msg) // from sketch.js
