@@ -5,7 +5,7 @@
 // Evolution EcoSystem
 
 class World {
-  constructor({bloops, energy, ports }) {
+  constructor(bloops=[], energy=0) {
     this.food = energy
     this.bloops = bloops
     this.size = {x: 500, y: 500} // TODO: send through ports to visualize network space?

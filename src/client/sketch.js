@@ -11,7 +11,7 @@
 
 
 function createworld(msg) {
-    let world = new World(msg.world)
+    let world = new World(msg.bloops, msg.energy)
     return world
 }
 
@@ -19,8 +19,11 @@ function startsketch(world) {
   let sketch = function (p) {
     world.p = p
     p.setup = function () {
-      cnv = p.createCanvas(world.size.x, world.size.y)
+      let div = document.getElementById("sketch")
+      // cnv = p.createCanvas(world.size.x, world.size.y)
+      cnv = p.createCanvas(div.offsetWidth, div.offsetHeight)
       cnv.style('display', 'block')
+      cnv.parent("sketch")
       // noLoop()
     }
 

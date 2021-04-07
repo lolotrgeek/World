@@ -53,7 +53,7 @@ class World {
     return b
   }
 
-  spawn(health, dna=new DNA()) {
+  spawn(health, dna = new DNA()) {
     // set initial features of creature
     log(`${tag} Spawning : ${health}`, 0)
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
@@ -193,13 +193,13 @@ class World {
           if (b.state.selection && Object.keys(b.state.selection).length > 0) {
             // console.log('Selection:', b.state.selection)
             // selection {mate: {creature.features}, payment: {int}}
-            
+
             // Asexual
             let childfeatures = {
               dna: b.features.dna.mutate(0.2),
               health: b.state.selection.payment
             }
-            
+
             // NOTE: parent pays health, even if no child gets spawned!
             if (this.queue.length > 0) {
               //randomly pick an agent from the queue
@@ -248,7 +248,7 @@ class World {
       // listen for world renderers
       if (msg === "WORLD") {
         this.addWorld("WORLD") // TODO: add uuid for worlds and live reloading
-        return JSON.stringify({ world: this })
+        return JSON.stringify({ start: {bloops: this.bloops, energy: this.energy } })
       }
       // listen for agent messages
       else {
@@ -278,14 +278,15 @@ class World {
             // modify message in the following...
             log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
 
+            // Forward agent actions to world
+            send("WORLD", msg)
+
           }
           // handle unknown messages
           else {
             log(`${tag} Unknown: ${JSON.stringify(obj)}`)
           }
         }
-        // Forward agent messages to world
-        send("WORLD", msg)
       }
     })
   }
@@ -296,7 +297,8 @@ class World {
       this.step()
       if (this.worlds.length > 0) {
         //TODO: uuid worlds for multiple, iterate through each to send 
-        send("WORLD", JSON.stringify(this.bloops))
+        send("WORLD", JSON.stringify({world: this}))
+        // send("WORLD", JSON.stringify({ agents: this.agents, queue: this.queue }))
       }
     }, this.speed)
   }
