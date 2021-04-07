@@ -10,14 +10,12 @@
 // When the creatures die, food is left behind
 
 
-let world
-
 function createworld(msg) {
-    world = new World(msg.world)
-    startsketch(world)
+    let world = new World(msg.world)
+    return world
 }
 
-function startsketch() {
+function startsketch(world) {
   let sketch = function (p) {
     world.p = p
     p.setup = function () {
@@ -37,15 +35,8 @@ function startsketch() {
 
   let myp5 = new p5(sketch)
 }
-function stopsketch() {
+function stopsketch(world) {
   console.log('stopping')
   world.p.remove()
 }
 
-listen(msg => {
-  if (Array.isArray(msg)) world.bloops = msg
-  else if (typeof msg === 'object' && typeof msg.world === 'object') createworld(msg)
-  else if (msg === "CLOSED") {
-    stopsketch()
-  }
-})

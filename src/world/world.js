@@ -284,6 +284,8 @@ class World {
             log(`${tag} Unknown: ${JSON.stringify(obj)}`)
           }
         }
+        // Forward agent messages to world
+        send("WORLD", msg)
       }
     })
   }

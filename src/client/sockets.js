@@ -13,6 +13,7 @@ ws.onopen = () => {
 function listen(callback) {
     ws.onmessage = async (message) => {
         if (typeof message.data === 'string') {
+            
             callback(JSON.parse(message.data))
         }
     }
