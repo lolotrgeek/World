@@ -69,7 +69,8 @@ class Select extends Module {
 
     spin(self) {
         let payment = self.action.params[0]
-
+        // do not accept 0 or negative payments
+        if(payment <= 0) return {selection : false}
         let others = self.state.nearby
         let threshold = 0.01
         // score others by attractiveness

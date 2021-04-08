@@ -44,7 +44,7 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Look(), new Select(), new Move()]
+    let modules = [new Module(), new Look(), new Move()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
@@ -67,15 +67,9 @@ class World {
   }
 
   conserve(energy) {
-    this.energy = this.energy - energy
-  }
+    this.energy -= energy
+    log(`${tag} Conserving : ${energy} of ${this.energy}`, 0)
 
-  populate() {
-    while (this.energy > 0) {
-      let health = this.distribute(this.energy)
-      this.spawn(health)
-      this.conserve(health)
-    }
   }
 
   cost(action) {
@@ -87,7 +81,7 @@ class World {
 
   addCreature(agent) {
     if (this.energy > 0) {
-      let health = this.distribute(this.energy)
+      let health = randint(1, this.energy)
       let bloop = this.spawn(health)
       this.conserve(health)
       bloop.agent = agent
@@ -165,14 +159,15 @@ class World {
       // Handle Disconnected Agents
 
       if (Date.now() - agent.time > this.speed * 2) {
-        log(`${tag} Agent ${agent.name} in queue is dead.`, 1)
+        log(`${tag} Agent ${agent.name} in queue is dead.`, 0)
         this.queue.splice(i, 1)
       }
 
-      let threshold = random(-1, 1)
+      // Divine Intervention To convert energy to Creature
+      let threshold = random(-10, 1)
 
       if (threshold > this.odds) {
-        log(`${tag} Threshold passed! Spawning ${agent.name}`, 1)
+        log(`${tag} Threshold passed! Spawning ${agent.name}`, 0)
         let bloop = this.addCreature(agent.name)
         let response = { creature: bloop, agent: agent.name }
         if (bloop) {
@@ -182,16 +177,17 @@ class World {
         send(agent.name, JSON.stringify(response))
       }
     })
-
+    let creature_energy = 0
     this.bloops.forEachRev((b, i) => {
       // Handle Death from natural causes
-      if (b.features.health < 0.0) {
+      if (b.features.health <= 0.0) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
         let agentIndex = this.agents.findIndex(agent => agent === b.agent)
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from 0 Health. Energy ${this.energy}`, 0)
+        this.energy += b.features.health
+        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
       }
       // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
@@ -200,7 +196,8 @@ class World {
         let agentIndex = this.agents.findIndex(agent => agent === b.agent)
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from No agent. Energy ${this.energy}`, 0)
+        log(`${tag} Creature ${b.features.name} Died from No agent.`, 1)
+        this.energy += b.features.health
       }
       // Not Dead!
       else {
@@ -210,7 +207,7 @@ class World {
             // console.log('Selection:', b.state.selection)
             // selection {mate: {creature.features}, payment: {int}}
 
-            // Asexual
+            // Asexual - "nearby" is the trigger to reproduce, see Select() module
             let childfeatures = {
               dna: b.features.dna.mutate(0.2),
               health: b.state.selection.payment
@@ -218,6 +215,7 @@ class World {
 
             // NOTE: parent pays health, even if no child gets spawned!
             if (this.queue.length > 0) {
+              log(`${tag} Reproducing: Parent ${b.features.name} agent. Energy ${childfeatures.health}`, 0)
               //randomly pick an agent from the queue
               let chosen = randint(this.queue.length)
               let agent = this.queue[chosen]
@@ -248,14 +246,21 @@ class World {
         // action: { choice: int, params: [], last_action: int }
         // Perform action, send observation
         if (b.action.choice > 0) {
-          log(`${tag} Creature Action ${b.action.choice}`, 0)
+          log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
           let full_observation = this.bloops.filter((bloop, index) => index !== i) // filter out self from observation
-          b.spin(full_observation, this.cost(b.action.choice))
+          let cost = random(0, 1)
+          if(cost < 0) console.log(cost)
+          b.spin(full_observation, cost)
+          b.features.health -= cost 
+          this.energy += cost // "pay" world the cost of the action
           send(b.agent, { state: b.state })
+          
           b.reset()
         }
+        creature_energy += b.features.health
       }
     })
+    if(this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 1)
   }
 
   reset() {

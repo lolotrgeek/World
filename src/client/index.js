@@ -58,6 +58,8 @@ agents_online_headers.appendChild(block(heading(`Name`)))
 agents_online_headers.appendChild(block(heading(`Action`)))
 agents_online_headers.appendChild(block(heading(`Last Action`)))
 
+
+
 listen(msg => {
     if (typeof msg === 'object') {
 
@@ -67,16 +69,15 @@ listen(msg => {
         }
 
         if (typeof msg.world === 'object') {
-            if(typeof msg.world.energy === 'number') {
-                clear(world_stats_div)
-                world_stats_div.appendChild(block(text(`Energy : ${msg.world.energy}`)))
-            }
-            if (Array.isArray(msg.world.bloops)) {
+            let creature_energy = 0
+
+            if (Array.isArray(msg.world.bloops)) {                
                 // update creatures
                 world.bloops = msg.world.bloops
                 // creatures_div.innerText = "Creatures:" + JSON.stringify(msg.world.bloops)
                 clear(creatures_alive)
                 world.bloops.map(bloop => {
+                    creature_energy += bloop.features.health
                     creatures_alive.appendChild(block(text(`${bloop.features.name}`)))
                     creatures_alive.appendChild(block(text(`${bloop.features.health}`)))
                     creatures_alive.appendChild(block(text(`${Math.round(bloop.state.position.x)}`)))
@@ -109,12 +110,17 @@ listen(msg => {
                     agents_waiting_div.appendChild(block(text(``)))
                     agents_waiting_div.appendChild(block(text(``)))
                 })
-
             }
+            if(typeof msg.world.energy === 'number') {
+                clear(world_stats_div)
+                world_stats_div.appendChild(block(text(`Available Energy : ${msg.world.energy}`)))
+                world_stats_div.appendChild(block(text(`Total Energy : ${creature_energy + msg.world.energy}`)))
+            }            
         }
         else if (msg.action) {
             // Agent Actions
         }
+        total_energy = []
     }
     else if (msg === "CLOSED") {
         stopsketch(world) // from sketch.js
