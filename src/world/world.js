@@ -161,14 +161,26 @@ class World {
   step() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
-      log(`${tag} Agent Waiting, Energy ${this.energy}`, 0)
-      let bloop = this.addCreature(agent)
-      let response = { creature: bloop, agent: agent }
-      if (bloop) {
-        this.addAgent(agent)
+      log(`${tag} Agent Waiting, ${agent.name}`, 0)
+      // Handle Disconnected Agents
+
+      if (Date.now() - agent.time > this.speed * 2) {
+        log(`${tag} Agent ${agent.name} in queue is dead.`, 1)
         this.queue.splice(i, 1)
       }
-      send(agent, JSON.stringify(response))
+
+      let threshold = random(-1, 1)
+
+      if (threshold > this.odds) {
+        log(`${tag} Threshold passed! Spawning ${agent.name}`, 1)
+        let bloop = this.addCreature(agent.name)
+        let response = { creature: bloop, agent: agent.name }
+        if (bloop) {
+          this.addAgent(agent.name)
+          this.queue.splice(i, 1)
+        }
+        send(agent.name, JSON.stringify(response))
+      }
     })
 
     this.bloops.forEachRev((b, i) => {
@@ -176,14 +188,18 @@ class World {
       if (b.features.health < 0.0) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
-        this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
+        let agentIndex = this.agents.findIndex(agent => agent === b.agent)
+        // console.log("Agent Back to Queue:", this.agents[agentIndex])
+        this.agents.splice(agentIndex, 1)
         log(`${tag} Creature ${b.features.name} Died from 0 Health. Energy ${this.energy}`, 0)
       }
       // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
         send(b.agent, { dead: b })
         this.bloops.splice(i, 1)
-        this.agents.splice(this.agents.findIndex(agent => agent === b.agent), 1)
+        let agentIndex = this.agents.findIndex(agent => agent === b.agent)
+        // console.log("Agent Back to Queue:", this.agents[agentIndex])
+        this.agents.splice(agentIndex, 1)
         log(`${tag} Creature ${b.features.name} Died from No agent. Energy ${this.energy}`, 0)
       }
       // Not Dead!
@@ -240,7 +256,6 @@ class World {
         }
       }
     })
-    this.queue = [] // clearing queue ensures that only living agents will be re-added next step
   }
 
   reset() {
@@ -248,19 +263,24 @@ class World {
       // listen for world renderers
       if (msg === "WORLD") {
         this.addWorld("WORLD") // TODO: add uuid for worlds and live reloading
-        return JSON.stringify({ start: {bloops: this.bloops, energy: this.energy } })
+        return JSON.stringify({ start: { bloops: this.bloops, energy: this.energy } })
       }
       // listen for agent messages
       else {
         let obj = getObject(msg)
         if (obj) {
           // Handle new or returning Agent messages
-          // agent message { name: string}
+          // agent message { name: string, time: number}
           if (obj.name) {
-            let found = this.agents.find(agent => agent === obj.name)
-            if (!found) {
+            let inAgents = this.agents.find(agent => agent === obj.name)
+            let queued = this.queue.findIndex(agent => agent.name === obj.name)
+            let inQueue = queued > -1
+            if (!inAgents && !inQueue) {
               log(`${tag} Adding agent ${obj.name} to queue.`, 0)
-              this.queue.push(obj.name)
+              this.queue.push(obj)
+            } else if (!inAgents && inQueue) {
+              log(`${tag} Updating agent ${obj.name} in queue.`, 0)
+              this.queue[queued] = obj
             }
           }
           // Handle Actions messages
@@ -297,7 +317,7 @@ class World {
       this.step()
       if (this.worlds.length > 0) {
         //TODO: uuid worlds for multiple, iterate through each to send 
-        send("WORLD", JSON.stringify({world: this}))
+        send("WORLD", JSON.stringify({ world: this }))
         // send("WORLD", JSON.stringify({ agents: this.agents, queue: this.queue }))
       }
     }, this.speed)
