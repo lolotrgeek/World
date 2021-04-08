@@ -18,7 +18,7 @@ class Agent {
 
         // state
         this.observations = []
-        this.action = { choice: 0, params: [] }
+        this.action = { choice: 0, params: [], last_action: Date.now()}
         this.state = {}
     }
 
@@ -56,7 +56,7 @@ class Agent {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
             log(`${tag} Action Step: ${JSON.stringify(msg)}`, 0)
         } else {
-            msg = {name: this.name} // request a new creature
+            msg = {name: this.name, time: Date.now()} // request a new creature
             log(`${tag} Request Step: ${JSON.stringify(msg)}`, 0)
         }
         

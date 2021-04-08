@@ -26,7 +26,7 @@ class Bloop {
 
     // state
     this.observations = []
-    this.action = { choice: 0, params: [] }
+    this.action = { choice: 0, params: [], last_action: Date.now()}
     this.state = {} // see manifest() in ./src/world/world.js for initial state
   }
 
