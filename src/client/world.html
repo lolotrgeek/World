@@ -43,6 +43,18 @@
         .grid>div>span{
             overflow-wrap: break-word;
         }
+        #world{
+            height: 10vh;
+        }
+        #running{
+            height: 20vh;
+        }
+        #queue{
+            height: 20vh;
+        }
+        #creautures {
+            height:20vh;
+        }
     </style>
 </head>
 
@@ -53,12 +65,17 @@
             <div id="world-stats"></div>
         </div>
         <div id="agents" >
-            <h3>Online: </h3>
-            <div id="online-column-headers" class="grid"></div>
-            <div id="online" class="grid"></div>
-            <h3>Queue: </h3>
-            <div id="waiting-column-headers" class="grid"></div>
-            <div id="waiting" class="grid"></div>
+            <div id="running">
+                <h3>Online: </h3>
+                <div id="online-column-headers" class="grid"></div>
+                <div id="online" class="grid"></div>
+            </div>
+            <div id="queue">
+                <h3>Queue: </h3>
+                <div id="waiting-column-headers" class="grid"></div>
+                <div id="waiting" class="grid"></div>
+            </div>
+
         </div>
         <div id="creatures" >
             <div id="creature-column-headers" class="grid"></div>

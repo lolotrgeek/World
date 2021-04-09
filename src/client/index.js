@@ -74,7 +74,6 @@ listen(msg => {
             if (Array.isArray(msg.world.bloops)) {                
                 // update creatures
                 world.bloops = msg.world.bloops
-                // creatures_div.innerText = "Creatures:" + JSON.stringify(msg.world.bloops)
                 clear(creatures_alive)
                 world.bloops.map(bloop => {
                     creature_energy += bloop.features.health
