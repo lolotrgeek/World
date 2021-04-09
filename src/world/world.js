@@ -44,7 +44,7 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Look(), new Move()]
+    let modules = [new Module(), new Select, new Look(), new Move()]
     if (modules.length <= b.slots) {
       b.modules = modules
       b.slots -= modules.length
@@ -187,7 +187,7 @@ class World {
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
         this.energy += b.features.health
-        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
+        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
       }
       // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
@@ -196,7 +196,7 @@ class World {
         let agentIndex = this.agents.findIndex(agent => agent === b.agent)
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from No agent.`, 1)
+        log(`${tag} Creature ${b.features.name} Died from No agent.`, 0)
         this.energy += b.features.health
       }
       // Not Dead!
@@ -207,15 +207,16 @@ class World {
             // console.log('Selection:', b.state.selection)
             // selection {mate: {creature.features}, payment: {int}}
 
+            let parent_dna = b.features.dna.copy()
+            let child_dna = parent_dna.mutate(.02)
             // Asexual - "nearby" is the trigger to reproduce, see Select() module
             let childfeatures = {
-              dna: b.features.dna.mutate(0.2),
+              dna: child_dna,
               health: b.state.selection.payment
             }
 
-            // NOTE: parent pays health, even if no child gets spawned!
             if (this.queue.length > 0) {
-              log(`${tag} Reproducing: Parent ${b.features.name} agent. Energy ${childfeatures.health}`, 0)
+              log(`${tag} Reproducing: Parent ${b.features.name} agent. Energy ${childfeatures.health}`, 1)
               //randomly pick an agent from the queue
               let chosen = randint(this.queue.length)
               let agent = this.queue[chosen]
@@ -260,7 +261,7 @@ class World {
         creature_energy += b.features.health
       }
     })
-    if(this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 1)
+    if(this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 0 )
   }
 
   reset() {
