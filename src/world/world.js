@@ -152,6 +152,25 @@ class World {
     }
   }
 
+  populate(agent, i) {
+    // Spawn a population
+    let initial_population = 5
+    let threshold = 0
+    if (this.energy > 0 && this.bloops.length < initial_population && this.queue.length > initial_population) threshold = this.odds
+    if (threshold >= this.odds) {
+      // Populate world if there are no creatures
+      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.queue.length}`, 0)
+      let bloop = this.addCreature(agent.name)
+      let response = { creature: bloop, agent: agent.name }
+      if (bloop) {
+        this.addAgent(agent.name)
+        this.queue.splice(i, 1)
+      }
+      send(agent.name, JSON.stringify(response))
+
+    }
+  }
+
   step() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
@@ -162,21 +181,9 @@ class World {
         log(`${tag} Agent ${agent.name} in queue is dead.`, 0)
         this.queue.splice(i, 1)
       }
-
-      // Divine Intervention To convert energy to Creature
-      let threshold = random(-10, 1)
-
-      if (threshold > this.odds) {
-        log(`${tag} Threshold passed! Spawning ${agent.name}`, 0)
-        let bloop = this.addCreature(agent.name)
-        let response = { creature: bloop, agent: agent.name }
-        if (bloop) {
-          this.addAgent(agent.name)
-          this.queue.splice(i, 1)
-        }
-        send(agent.name, JSON.stringify(response))
-      }
+      this.populate(agent, i)
     })
+
     let creature_energy = 0
     this.bloops.forEachRev((b, i) => {
       // Handle Death from natural causes
@@ -216,11 +223,14 @@ class World {
             }
 
             if (this.queue.length > 0) {
-              log(`${tag} Reproducing: Parent ${b.features.name} agent. Energy ${childfeatures.health}`, 1)
               //randomly pick an agent from the queue
               let chosen = randint(this.queue.length)
               let agent = this.queue[chosen]
-              let child = this.spawn(childfeatures.health, childfeatures.dna)
+              let divine_energy = randint(0, this.energy)
+              this.energy -= divine_energy
+              let child = this.spawn(childfeatures.health + divine_energy, childfeatures.dna)
+              child.features.name = parseInt(`${b.features.name}${Date.now()}`)
+              log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 0)
               // conserve - paid health of parent into child health
               b.features.health -= b.state.selection.payment
               // modified addCreature sequence
@@ -232,10 +242,8 @@ class World {
                 this.queue.splice(chosen, 1)
               }
               send(agent, JSON.stringify(response))
+              b.state.selection = null
             }
-
-
-
             // Sexual
             // TODO: decide if mating is reciprocal
             // upon selection this sends reproduction request to creature by name
@@ -250,18 +258,18 @@ class World {
           log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
           let full_observation = this.bloops.filter((bloop, index) => index !== i) // filter out self from observation
           let cost = random(0, 1)
-          if(cost < 0) console.log(cost)
+          if (cost < 0) console.log(cost)
           b.spin(full_observation, cost)
-          b.features.health -= cost 
+          b.features.health -= cost
           this.energy += cost // "pay" world the cost of the action
           send(b.agent, { state: b.state })
-          
+
           b.reset()
         }
         creature_energy += b.features.health
       }
     })
-    if(this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 0 )
+    if (this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 0)
   }
 
   reset() {
