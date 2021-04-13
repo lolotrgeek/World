@@ -18,6 +18,7 @@ class Agent {
 
         // state
         this.observations = []
+        this.actions = []
         this.action = { choice: 0, params: [], last_action: Date.now()}
         this.state = {}
     }
@@ -50,10 +51,11 @@ class Agent {
         let msg
         if(this.observations.length > 0) {
             log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0 ) 
-            log(`${tag} Observation Step: ${JSON.stringify(this.observations[0].nearby)}`, 0) 
+            log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}`, 0) 
         }
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
+            this.actions.push(msg)
             log(`${tag} Action Step: ${JSON.stringify(msg)}`, 0)
         } else {
             msg = {name: this.name, time: Date.now()} // request a new creature
@@ -80,9 +82,18 @@ class Agent {
                 log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 0)
                 this.state.creature = msg.creature
             }
+
+            if(msg.dying) {
+                if (msg.dying.agent === this.name) {
+                    log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Actions: ${this.actions.length}`, 1)
+                    // ping back sampled action to avoid dead
+                    msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
+                    send(msg)
+                }
+            }
             if (msg.dead) {
                 if (msg.dead.agent === this.name) {
-                    log(`${tag} Creature Died:  ${this.state.creature}`, 0)
+                    log(`${tag} Creature Died:  ${this.state.creature.features.name}`, 0)
                     this.state.creature = null
                 }
             }
