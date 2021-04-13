@@ -13,7 +13,7 @@ class World {
     this.size = size
     this.odds = odds
     this.energy = energy
-    this.generation = 0
+    this.generation = 0 // only tracks generation of creatures spawned by world
     this.bloops = []
     this.worlds = []
     this.agents = []
@@ -97,16 +97,17 @@ class World {
 
   /**
    * 
-   * @param {number} creature the integer representing a creature
+   * @param {string} name representing a creature's name
    * @returns `{index, creature}`
    */
-  findCreature(creature) {
+  findCreature(name) {
     let found = { index: -1, creature: null }
     for (let i = 0; i < this.bloops.length; i++) {
       let bloop = this.bloops[i]
-      if (bloop.features.name === creature) {
+      if (bloop.features.name === name) {
         found.creature = bloop
         found.index = i
+        
         break
       }
     }
@@ -119,18 +120,19 @@ class World {
    * @returns `{index, creature}`
    */
   seekCreature(name) {
-    let sought = { index: -1, name: null }
-    if (typeof name !== 'string' || name < 0) {
+    let sought
+    if (typeof name !== 'string' || name.length < 0) {
       log(`${tag} No name ${name}`)
+      return { index: -1, creature: null }
+    }
+    
+    log(`${tag} Seeking name ${name}`, 0)
+    sought = this.findCreature(name)
+
+    if (sought.index === -1) {
+      log(`${tag} Name ${name} not found`, 1)
     }
 
-    else {
-      log(`${tag} Seeking name ${name}`, 0)
-      sought = this.findCreature(name)
-    }
-    if (sought.index === -1) {
-      log(`${tag} Seeking name ${name} not found`, 0)
-    }
     return sought
   }
 
@@ -190,7 +192,7 @@ class World {
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
         this.energy += b.features.health
-        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
+        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
       }
       // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 5) {
@@ -199,8 +201,13 @@ class World {
         let agentIndex = this.agents.findIndex(agent => agent === b.agent)
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from No agent.`, 1)
+        log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
         this.energy += b.features.health
+      }
+      // Check Nearly dead
+      else if (Date.now() - b.action.last_action > this.speed * 3) {
+        log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, 1)
+        send(b.agent, { dying: b })
       }
       // Not Dead!
       else {
@@ -213,13 +220,13 @@ class World {
             let parent_dna = b.features.dna.copy()
             let child_dna = new DNA(parent_dna.mutate(.02))
             // Asexual - "nearby" is the trigger to reproduce, see Select() module
-            
+
             if (this.queue.length > 0) {
               //randomly pick an agent from the queue
               let chosen = this.queue.length - 1
               let agent = this.queue[chosen]
-              log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 1)
-              if(agent) {
+              log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
+              if (agent) {
                 let divine_energy = randint(0, this.energy)
                 this.energy -= divine_energy
                 let health = divine_energy + b.state.selection.payment
@@ -230,7 +237,7 @@ class World {
                 child.features.parent = b.features.id
                 child.features.id = this.bloops.length
                 child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
-                log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 1)
+                log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 0)
                 // conserve - paid health of parent into child health
                 b.features.health -= b.state.selection.payment
                 // modified addCreature sequence
@@ -306,14 +313,20 @@ class World {
           // Handle Actions messages
           // action message { action: {choice: int, params: []}, agent: string, creature: number }
           else if (obj.action) {
-            let found = this.seekCreature(obj.creature)
             let action = this.setAction(obj.action)
+            let found = this.seekCreature(obj.creature)
             // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
             // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
             let creature = this.bloops[found.index]
             if (creature && creature.features.health > 0 && creature.agent === obj.agent) {
-              log(`${tag} Action assigment: ${creature.features.health} ${creature.agent}`, 0)
+              log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, 0)
               this.bloops[found.index].action = action
+              this.bloops[found.index].actions.push(action)
+            }
+            else if (!creature) {
+              log(`${tag} Unfound Creature: ${creature}, at ${found.index} from ${creature.agent}`, 1)
+              //TODO: assume unfound creature is dead?
+              send(obj.agent, { dead: {agent: obj.agent } })
             }
             // modify message in the following...
             log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
