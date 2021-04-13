@@ -13,6 +13,7 @@ class World {
     this.size = size
     this.odds = odds
     this.energy = energy
+    this.generation = 0
     this.bloops = []
     this.worlds = []
     this.agents = []
@@ -58,7 +59,7 @@ class World {
     log(`${tag} Spawning : ${health}`, 0)
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
-    bloop.features.generation = 0
+    bloop.features.generation = this.generation
     bloop.features.parent = 0
     bloop.features.id = this.bloops.length
     bloop.features.name = `${bloop.features.generation}_${bloop.features.parent}_${bloop.features.id}`
@@ -162,7 +163,7 @@ class World {
         this.queue.splice(i, 1)
       }
       send(agent.name, JSON.stringify(response))
-
+      this.generation++
     }
   }
 

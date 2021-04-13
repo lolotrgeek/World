@@ -43,6 +43,11 @@ function heading(value) {
     element.innerText = value
     return element
 }
+function subheading(value) {
+    let element = document.createElement("em")
+    element.innerText = value
+    return element
+}
 
 world_div.prepend(block(title("World")))
 
@@ -53,10 +58,17 @@ creatures_headers.appendChild(block(heading(`X`)))
 creatures_headers.appendChild(block(heading(`Y`)))
 
 agents_div.prepend(block(title("Agents")))
+// agents headers
 agents_online_headers.appendChild(block(heading(`Agent`)))
 agents_online_headers.appendChild(block(heading(`Name`)))
 agents_online_headers.appendChild(block(heading(`Action`)))
 agents_online_headers.appendChild(block(heading(`Last Action`)))
+
+// agents sub headers
+agents_online_headers.appendChild(block(subheading(``)))
+agents_online_headers.appendChild(block(subheading(`(Generation_Parent_Id)`)))
+agents_online_headers.appendChild(block(subheading(``)))
+agents_online_headers.appendChild(block(subheading(``)))
 
 
 
