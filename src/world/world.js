@@ -58,7 +58,10 @@ class World {
     log(`${tag} Spawning : ${health}`, 0)
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
-    bloop.features.name = this.bloops.length
+    bloop.features.generation = 0
+    bloop.features.parent = 0
+    bloop.features.id = this.bloops.length
+    bloop.features.name = `${bloop.features.generation}_${bloop.features.parent}_${bloop.features.id}`
     return bloop
   }
 
@@ -111,29 +114,21 @@ class World {
 
   /**
    * 
-   * @param {number} creature the integer representing a creature's name
+   * @param {string} name representing a creature's name
    * @returns `{index, creature}`
    */
-  seekCreature(creature) {
-    let sought = { index: -1, creature: null }
-    if (typeof creature !== 'number' || creature < 0) {
-      log(`${tag} No Creature ${creature}`)
+  seekCreature(name) {
+    let sought = { index: -1, name: null }
+    if (typeof name !== 'string' || name < 0) {
+      log(`${tag} No name ${name}`)
     }
+
     else {
-      let bloop
-      if (this.bloops[creature]) {
-        bloop = this.bloops[creature]
-        log(`${tag} Seeking creature ${creature}, found ${bloop.features.name}`, 0)
-        sought.creature = bloop
-        sought.index = creature
-      }
-      else if (bloop && bloop.features.name !== creature) {
-        log(`${tag} Seeking creature ${creature}, found wrong ${bloop.features.name}`, 0)
-        sought = this.findCreature(creature)
-      }
-      else if (!bloop) {
-        log(`${tag} Seeking creature ${creature} not found`, 0)
-      }
+      log(`${tag} Seeking name ${name}`, 0)
+      sought = this.findCreature(name)
+    }
+    if (sought.index === -1) {
+      log(`${tag} Seeking name ${name} not found`, 0)
     }
     return sought
   }
@@ -194,7 +189,7 @@ class World {
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
         this.energy += b.features.health
-        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
+        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
       }
       // Handle Death when no new action for this step...
       else if (Date.now() - b.action.last_action > this.speed * 2) {
@@ -203,39 +198,43 @@ class World {
         let agentIndex = this.agents.findIndex(agent => agent === b.agent)
         // console.log("Agent Back to Queue:", this.agents[agentIndex])
         this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from No agent.`, 0)
+        log(`${tag} Creature ${b.features.name} Died from No agent.`, 1)
         this.energy += b.features.health
       }
       // Not Dead!
       else {
         // Handle State
         if (b.state) {
+          // Reproduction
           if (b.state.selection && Object.keys(b.state.selection).length > 0) {
             // console.log('Selection:', b.state.selection)
             // selection {mate: {creature.features}, payment: {int}}
 
             let parent_dna = b.features.dna.copy()
-            let child_dna = parent_dna.mutate(.02)
+            let child_dna = new DNA(parent_dna.mutate(.02))
             // Asexual - "nearby" is the trigger to reproduce, see Select() module
-            let childfeatures = {
-              dna: child_dna,
-              health: b.state.selection.payment
-            }
-
             if (this.queue.length > 0) {
               //randomly pick an agent from the queue
               let chosen = randint(this.queue.length)
               let agent = this.queue[chosen]
               let divine_energy = randint(0, this.energy)
               this.energy -= divine_energy
-              let child = this.spawn(childfeatures.health + divine_energy, childfeatures.dna)
-              child.features.name = parseInt(`${b.features.name}${Date.now()}`)
-              log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 0)
+              let health = divine_energy + b.state.selection.payment
+              log(`${tag} Spawning Child : ${divine_energy}`, 0)
+              let child = this.manifest(this.modulate(new Bloop(child_dna, health)))
+              child.reset()
+              child.features.generation = b.features.generation + 1
+              child.features.parent = b.features.id
+              child.features.id = this.bloops.length
+              child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
+              log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 1)
               // conserve - paid health of parent into child health
               b.features.health -= b.state.selection.payment
               // modified addCreature sequence
               child.agent = agent
               this.bloops.push(child)
+              // check for child in bloops?
+              // console.log(this.bloops.map(bloop => bloop.features.name))
               let response = { creature: child, agent: agent }
               if (child) {
                 this.addAgent(agent)
@@ -329,6 +328,7 @@ class World {
     this.reset()
     setInterval(() => {
       this.step()
+      if (this.bloops.length > 0) console.log(this.bloops.map(bloop => bloop.features.name))
       if (this.worlds.length > 0) {
         //TODO: uuid worlds for multiple, iterate through each to send 
         send("WORLD", JSON.stringify({ world: this }))
