@@ -21,4 +21,5 @@ function run() {
     app.listen(HTTP_PORT, () => log(`${tag} HTTP listening at ${HTTP_PORT}`))
 }
 
-run()
+module.exports = { run }
+// run()
