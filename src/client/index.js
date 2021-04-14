@@ -82,10 +82,11 @@ listen(msg => {
 
         if (typeof msg.world === 'object') {
             let creature_energy = 0
+            let bloops = typeof msg.world.bloops === 'object' ? Object.values(msg.world.bloops) : null
 
-            if (Array.isArray(msg.world.bloops)) {                
+            if (bloops) {                
                 // update creatures
-                world.bloops = msg.world.bloops
+                world.bloops = bloops
                 clear(creatures_alive)
                 world.bloops.map(bloop => {
                     creature_energy += bloop.features.health
