@@ -139,6 +139,10 @@ global.getObject = function getObject(string) {
   }
 }
 
+global.len = function len(object) {
+  return Object.keys(object).length
+}
+
 const PERLIN_YWRAPB = 4
 const PERLIN_YWRAP = 1 << PERLIN_YWRAPB
 const PERLIN_ZWRAPB = 8
