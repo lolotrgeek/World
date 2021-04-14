@@ -87,11 +87,17 @@ class World {
     if (this.energy > 0) {
       let health = randint(1, this.energy)
       let bloop = this.spawn(health)
-      this.conserve(health)
-      bloop.agent = agent
-      this.bloops[bloop.name] = bloop
-      log(`${tag} Adding Creature ${this.bloops[bloop.name].features.name}`, 0)
-      return bloop
+      if (bloop.features.name) {
+        this.conserve(health)
+        bloop.agent = agent
+        this.bloops[bloop.features.name] = bloop
+        log(`${tag} Adding Creature ${bloop.features.name}`, 1)
+        return bloop
+      }
+      else {
+        log(`${tag} Invalid Creature ${JSON.stringify(bloop)}`, 1)
+        return null
+      }
     }
     else return null
   }
@@ -106,9 +112,9 @@ class World {
       log(`${tag} No name ${name}`)
       return { creature: null }
     }
-    
+
     log(`${tag} Seeking name ${name}`, 0)
-    return {creature: this.bloops[name]}
+    return { creature: this.bloops[name] }
   }
 
   populate(agent, i) {
@@ -118,7 +124,7 @@ class World {
     if (this.energy > 0 && len(this.bloops) < initial_population && this.queue.length > initial_population) threshold = this.odds
     if (threshold >= this.odds) {
       // Populate world if there are no creatures
-      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.queue.length}`, 0)
+      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.queue.length}`, 1)
       let bloop = this.addCreature(agent.name)
       let response = { creature: bloop, agent: agent.name }
       if (bloop) {
@@ -130,7 +136,7 @@ class World {
     }
   }
 
-  step() {
+  waiting() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
       log(`${tag} Agent Waiting, ${agent.name}`, 0)
@@ -142,110 +148,190 @@ class World {
       }
       this.populate(agent, i)
     })
+  }
 
+  dead(b) {
+    // Handle Death from natural causes
+    if (b.features.health <= 0.0) {
+      let agentIndex = this.agents.findIndex(agent => agent === b.agent)
+      // console.log("Agent Back to Queue:", this.agents[agentIndex])
+      this.agents.splice(agentIndex, 1)
+      if (b.features.health > 0.0) this.energy += b.features.health
+      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
+      return true
+    }
+    // Handle Death when no new action for this step...
+    else if (Date.now() - b.action.last_action > this.speed * 5) {
+      send(b.agent, { dead: b })
+      let agentIndex = this.agents.findIndex(agent => agent === b.agent)
+      // console.log("Agent Back to Queue:", this.agents[agentIndex])
+      this.agents.splice(agentIndex, 1)
+      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
+      if (b.features.health > 0.0) this.energy += b.features.health
+      return true
+    }
+    // Check Nearly dead
+    else if (Date.now() - b.action.last_action > this.speed * 3) {
+      log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, 0)
+      send(b.agent, { dying: b })
+      return false
+    }
+    else return false
+  }
+
+  reproduce(b) {
+    if (b.state.selection && Object.keys(b.state.selection).length > 0) {
+      log(`${tag} Reproducing: ${b.state.selection}`, 0)
+      // selection {mate: {creature.features}, payment: {int}}
+
+      let parent_dna = b.features.dna.copy()
+      let child_dna = new DNA(parent_dna.mutate(.02))
+      // Asexual - "nearby" is the trigger to reproduce, see Select() module
+
+      if (this.queue.length > 0) {
+        //randomly pick an agent from the queue
+        let chosen = this.queue.length - 1
+        let agent = this.queue[chosen]
+        log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
+        if (agent) {
+          //modified spawn
+          let divine_energy = randint(0, this.energy)
+          let health = divine_energy + b.state.selection.payment
+          let child = this.manifest(this.modulate(new Bloop(child_dna, health)))
+          child.reset()
+          child.features.generation = b.features.generation + 1
+          child.features.parent = b.features.id
+          child.features.id = len(this.bloops)
+          child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
+          // modified addCreature
+          child.agent = agent.name
+          let response = { creature: child, agent: agent.name }
+          // TODO: Establish that an agent is ready to run creature, otherwise creature may die next step
+          if (child && child.features.name) {
+            this.addAgent(agent.name)
+            this.queue.splice(chosen, 1)
+            send(agent.name, JSON.stringify(response))
+            // conserve - global energy
+            this.energy -= divine_energy
+            // conserve - paid health of parent into child health
+            b.features.health -= b.state.selection.payment
+            this.bloops[child.features.name] = child
+            log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 1)
+          }
+          else {
+            log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `, 1)
+          }
+
+        }
+
+        // check for child in bloops?
+        // console.log(this.bloops.map(bloop => bloop.features.name))
+
+        b.state.selection = null
+      }
+      // Sexual
+      // TODO: decide if mating is reciprocal
+      // upon selection this sends reproduction request to creature by name
+      // let mate = this.seekCreature(b.state.selection.mate.name)
+      // the creature then sends this mate request to agent...
+    }
+  }
+
+  observation(b) {
+    // OPTIMIZE: This could be faster
+    // let full_state = clone(this.bloops)
+    // delete full_state[b.features.name] // remove self from observation
+    // let full_observation = Object.values(full_state)
+
+    let full_observation = Object.values(this.bloops)
+    return full_observation.filter(bloop => bloop.features.name !== b.features.name) // filter self from observation
+  }
+
+  /**
+   * Perform action, send observation 
+   * @param {*} b creature class
+   * @param {Object} b.action `{ choice: int, params: [], last_action: int }`  
+   */
+  act(b) {
+    log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
+    let full_observation = this.observation(b)
+    let cost = random(0, 1)
+    if (cost < 0) console.log(cost)
+    b.spin(full_observation, cost)
+    b.features.health -= cost
+    this.energy += cost // "pay" world the cost of the action
+    send(b.agent, { state: b.state })
+    b.reset()
+  }
+
+  step() {
+    this.waiting()
     let creature_energy = 0
     for (let bloop_name in this.bloops) {
       let b = this.bloops[bloop_name]
-      // Handle Death from natural causes
-      if (b.features.health <= 0.0) {
+      let death = this.dead(b)
+      if (death === true) {
         send(b.agent, { dead: b })
-        let agentIndex = this.agents.findIndex(agent => agent === b.agent)
-        // console.log("Agent Back to Queue:", this.agents[agentIndex])
-        this.agents.splice(agentIndex, 1)
-        this.energy += b.features.health
-        log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
         delete this.bloops[bloop_name]
       }
-      // Handle Death when no new action for this step...
-      else if (Date.now() - b.action.last_action > this.speed * 5) {
-        send(b.agent, { dead: b })
-        let agentIndex = this.agents.findIndex(agent => agent === b.agent)
-        // console.log("Agent Back to Queue:", this.agents[agentIndex])
-        this.agents.splice(agentIndex, 1)
-        log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
-        this.energy += b.features.health
-        delete this.bloops[bloop_name]
-      }
-      // Check Nearly dead
-      else if (Date.now() - b.action.last_action > this.speed * 3) {
-        log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, 1)
-        send(b.agent, { dying: b })
-      }
-      // Not Dead!
       else {
         // Handle State
         if (b.state) {
-          if (b.state.selection && Object.keys(b.state.selection).length > 0) {
-            log(`${tag} Reproducing: ${b.state.selection}`, 0)
-            // selection {mate: {creature.features}, payment: {int}}
-
-            let parent_dna = b.features.dna.copy()
-            let child_dna = new DNA(parent_dna.mutate(.02))
-            // Asexual - "nearby" is the trigger to reproduce, see Select() module
-
-            if (this.queue.length > 0) {
-              //randomly pick an agent from the queue
-              let chosen = this.queue.length - 1
-              let agent = this.queue[chosen]
-              log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
-              if (agent) {
-                let divine_energy = randint(0, this.energy)
-                this.energy -= divine_energy
-                let health = divine_energy + b.state.selection.payment
-                log(`${tag} Spawning Child : ${divine_energy}`, 0)
-                let child = this.manifest(this.modulate(new Bloop(child_dna, health)))
-                child.reset()
-                child.features.generation = b.features.generation + 1
-                child.features.parent = b.features.id
-                child.features.id = len(this.bloops)
-                child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
-                log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 0)
-                // conserve - paid health of parent into child health
-                b.features.health -= b.state.selection.payment
-                // modified addCreature sequence
-                child.agent = agent.name
-                let response = { creature: child, agent: agent.name }
-                //Establish that an agent is ready to run creature, otherwise creature will die next step
-                if (child) {
-                  this.addAgent(agent.name)
-                  this.queue.splice(chosen, 1)
-                  send(agent.name, JSON.stringify(response))
-                }
-                this.bloops[child.name] = child
-              }
-
-              // check for child in bloops?
-              // console.log(this.bloops.map(bloop => bloop.features.name))
-
-              b.state.selection = null
-            }
-            // Sexual
-            // TODO: decide if mating is reciprocal
-            // upon selection this sends reproduction request to creature by name
-            // let mate = this.seekCreature(b.state.selection.mate.name)
-            // the creature then sends this mate request to agent...
-          }
+          this.reproduce(b)
         }
         // Handle Actions
-        // action: { choice: int, params: [], last_action: int }
-        // Perform action, send observation
         if (b.action.choice > 0) {
-          log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
-          let full_observation = clone(this.bloops) 
-          full_observation[b.features.name] = {} // filter out self from observation
-          let cost = random(0, 1)
-          if (cost < 0) console.log(cost)
-          b.spin(full_observation, cost)
-          b.features.health -= cost
-          this.energy += cost // "pay" world the cost of the action
-          send(b.agent, { state: b.state })
-
-          b.reset()
+          this.act(b)
         }
-        creature_energy += b.features.health
       }
+      creature_energy += b.features.health
     }
-    if (this.energy + creature_energy > 1000) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 0)
+    if (this.energy + creature_energy !== 1000.0) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 1)
+  }
+
+  handleAgent(obj) {
+    // Handle new or returning Agent messages
+    // agent message { name: string, time: number}
+    let inAgents = this.agents.find(agent => agent === obj.name)
+    let queued = this.queue.findIndex(agent => agent.name === obj.name)
+    let inQueue = queued > -1
+    if (!inAgents && !inQueue) {
+      log(`${tag} Adding agent ${obj.name} to queue.`, 0)
+      this.queue.push(obj)
+    } else if (!inAgents && inQueue) {
+      log(`${tag} Updating agent ${obj.name} in queue.`, 0)
+      this.queue[queued] = obj
+    }
+  }
+
+  // Handle Actions messages
+  // action message { action: {choice: int, params: []}, agent: string, creature: number }
+  handleAction(obj) {
+    let action = obj.action
+    let creature = null
+
+    // let found = this.seekCreature(obj.creature)
+    if (typeof obj.creature !== 'string') {
+      log(`${tag} No name`)
+    }
+
+    log(`${tag} Seeking name ${obj.creature}`, 0)
+    creature = this.bloops[obj.creature]
+
+    if (creature && creature.agent === obj.agent) {
+      log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, 0)
+      action.last_action = Date.now()
+      creature.action = action
+      creature.actions.push(action)
+      send(obj.agent, { assigned: action })
+    }
+    else if (!creature) {
+      log(`${tag} Unfound Creature: ${obj.creature}`, 0)
+      //TODO: assume unfound creature is dead?
+      send(obj.agent, { dead: { agent: obj.agent } })
+    }
+    // modify message in the following...
+    log(`${tag} Action: ${obj.creature} : ${JSON.stringify(action)}`, 0)
   }
 
   reset() {
@@ -259,52 +345,16 @@ class World {
       else {
         let obj = getObject(msg)
         if (obj) {
-          // Handle new or returning Agent messages
-          // agent message { name: string, time: number}
-          if (obj.name) {
-            let inAgents = this.agents.find(agent => agent === obj.name)
-            let queued = this.queue.findIndex(agent => agent.name === obj.name)
-            let inQueue = queued > -1
-            if (!inAgents && !inQueue) {
-              log(`${tag} Adding agent ${obj.name} to queue.`, 0)
-              this.queue.push(obj)
-            } else if (!inAgents && inQueue) {
-              log(`${tag} Updating agent ${obj.name} in queue.`, 0)
-              this.queue[queued] = obj
-            }
-          }
-          // Handle Actions messages
-          // action message { action: {choice: int, params: []}, agent: string, creature: number }
+          if (obj.name) this.handleAgent(obj)
           else if (obj.action && obj.action.choice > -1 && obj.action.params.length > -1) {
-            
-            let action = obj.action
-            let found = this.seekCreature(obj.creature)
-            // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
-            // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
-            let creature = found.creature
-            if (creature && creature.features.health > 0 && creature.agent === obj.agent) {
-              log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, 0)
-              action.last_action = Date.now()
-              creature.action = action
-              creature.actions.push(action)
-              send(obj.agent, { assigned: action })
-            }
-            else if (!creature || found.index === -1) {
-              log(`${tag} Unfound Creature: ${creature}, at ${found.creature}`, 1)
-              //TODO: assume unfound creature is dead?
-              send(obj.agent, { dead: {agent: obj.agent } })
-            }
-            // modify message in the following...
-            log(`${tag} Action: ${found.index} : ${JSON.stringify(action)}`, 0)
-
+            this.handleAction(obj)
             // Forward agent actions to world
             send("WORLD", msg)
-
           }
-          // handle unknown messages
-          else {
-            log(`${tag} Unknown: ${JSON.stringify(obj)}`)
-          }
+        }
+        // handle unknown objects
+        else {
+          log(`${tag} Unknown: ${JSON.stringify(obj)}`)
         }
       }
     })
