@@ -136,20 +136,6 @@ class World {
     return sought
   }
 
-  /**
-   * 
-   * @param {number} action integer that corresponds with action
-   * @returns `{}` | `{action}`
-   */
-  setAction(action) {
-    if (action) {
-      action.last_action = Date.now()
-      return action
-    } else {
-      return {}
-    }
-  }
-
   populate(agent, i) {
     // Spawn a population
     let initial_population = 5
@@ -312,19 +298,22 @@ class World {
           }
           // Handle Actions messages
           // action message { action: {choice: int, params: []}, agent: string, creature: number }
-          else if (obj.action) {
-            let action = this.setAction(obj.action)
+          else if (obj.action && obj.action.choice > -1 && obj.action.params.length > -1) {
+            
+            let action = obj.action
             let found = this.seekCreature(obj.creature)
             // ISSUE: bloop could die before it gets assigned this action, which could result in wrong bloop being assigned action.
             // how to ensure correct bloop gets action being sent to it? -> make bloops autonomous (own process/port) -or- recheck bloop health and agent before assignment 
             let creature = this.bloops[found.index]
             if (creature && creature.features.health > 0 && creature.agent === obj.agent) {
               log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, 0)
-              this.bloops[found.index].action = action
-              this.bloops[found.index].actions.push(action)
+              action.last_action = Date.now()
+              creature.action = action
+              creature.actions.push(action)
+              send(obj.agent, { assigned: action })
             }
-            else if (!creature) {
-              log(`${tag} Unfound Creature: ${creature}, at ${found.index} from ${creature.agent}`, 1)
+            else if (!creature || found.index === -1) {
+              log(`${tag} Unfound Creature: ${creature}, at ${found.index}`, 1)
               //TODO: assume unfound creature is dead?
               send(obj.agent, { dead: {agent: obj.agent } })
             }
