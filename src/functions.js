@@ -1,4 +1,4 @@
-
+const v8 = require('v8');
 const fs = require('fs')
 
 /**
@@ -141,6 +141,10 @@ global.getObject = function getObject(string) {
 
 global.len = function len(object) {
   return Object.keys(object).length
+}
+
+global.clone = function clone(object) {
+  return v8.deserialize(v8.serialize(object))
 }
 
 const PERLIN_YWRAPB = 4
