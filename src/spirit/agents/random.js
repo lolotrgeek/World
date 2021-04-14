@@ -83,35 +83,38 @@ class Agent {
             // handle creature assignment
             // assignment : {creature: object, agent: string}
             else if (msg.creature && this.name === msg.agent) {
-                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 0)
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 1)
+                console.log(this.state.creature)
                 this.state.creature = msg.creature
             }
+            else if (this.state.creature) {
+                if(msg.dying) {
+                    if (msg.dying.agent === this.name && this.state.creature.features.name == msg.dying.features.name) {
+                        log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, 1)
+                        // ping back sampled action to avoid dead
+                        msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
+                        send(msg)
+                    }
+                }
+                if (msg.dead) {
+                    if (msg.dead.agent === this.name) {
+                        log(`${tag} Creature Died:  ${this.state.creature.features.name}`, 0)
+                        this.state.creature = null
+                    }
+                }
+                if(msg.state) {
+                    if(typeof msg.state === 'object') {
+                        log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, 0)
+                        this.observations.push(msg.state)
+                    }
+                }
+                if(msg.assigned) {
+                    log(`${tag} Action Assigned:  ${msg.assigned}`, 0)
+                    this.assigned.push(msg.assigned)
+                }
+                //TODO: handle waiting in queue? other than resending name?
+            }
 
-            else if(msg.dying) {
-                if (msg.dying.agent === this.name) {
-                    log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, 1)
-                    // ping back sampled action to avoid dead
-                    msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
-                    send(msg)
-                }
-            }
-            else if (msg.dead) {
-                if (msg.dead.agent === this.name) {
-                    log(`${tag} Creature Died:  ${this.state.creature.features.name}`, 0)
-                    this.state.creature = null
-                }
-            }
-            else if(msg.state) {
-                if(typeof msg.state === 'object') {
-                    log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, 0)
-                    this.observations.push(msg.state)
-                }
-            }
-            else if(msg.assigned) {
-                log(`${tag} Action Assigned:  ${msg.assigned}`, 0)
-                this.assigned.push(msg.assigned)
-            }
-            //TODO: handle waiting in queue? other than resending name?
         })
     }
 
