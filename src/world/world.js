@@ -92,7 +92,7 @@ class World {
         this.conserve(health)
         bloop.agent = agent
         this.bloops[bloop.features.name] = bloop
-        log(`${tag} Adding Creature ${bloop.features.name}`, 1)
+        log(`${tag} Adding Creature ${bloop.features.name}`, 0)
         return bloop
       }
       else {
@@ -124,7 +124,7 @@ class World {
     // to spawn a single generation add this `this.generation < initial_population` to the following if statement
     if (this.energy > 0 && len(this.bloops) < initial_population && this.queue.length > 0) {
       // Populate world if there are no creatures
-      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, 1)
+      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, 0)
       let bloop = this.addCreature(agent.name)
       let response = { creature: bloop, agent: agent.name }
       if (bloop) {
@@ -199,6 +199,7 @@ class World {
     child.features.generation = b.features.generation + 1
     child.features.parent = b.features.id
     child.features.id = len(this.bloops)
+    // TODO: update naming so parents can spawn multiple children
     child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
     return child
   }
@@ -206,7 +207,7 @@ class World {
   reproduce(b) {
     // selection {mate: {creature.features}, payment: {int}}
     let child = false
-    if (b.state.selection && Object.keys(b.state.selection).length > 0) {
+    if (b.features.health > 1 && b.state.selection && Object.keys(b.state.selection).length > 0) {
       log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, 0)
       let chosen = this.queue.length - 1
       let agent = this.selectAgent(chosen)
@@ -214,6 +215,10 @@ class World {
       if (agent) {
         // let  = randint(0, this.energy)
         child = this.spawnChild(b, health)
+        if (this.bloops[child.features.name]) {
+          log(`${tag} Reproducing: Unable to Spawn, already exists ${child.features.name}`, 1)
+          return false
+        }
         child.agent = agent.name
         let response = { creature: child, agent: agent.name }
         if (child.features.health !== health) {
@@ -299,9 +304,25 @@ class World {
     }
   }
 
+  balanceEnergy() {
+    let creature_energy = 0
+    let creatures = Object.values(this.bloops)
+    creatures.forEach(creature => {
+      if (typeof creature.features.health === 'number' && creature.features.health > 0.0) {
+        creature_energy += creature.features.health
+      } else {
+        console.log('Invalid Creature Energy', creature.features.health)
+      }
+    })
+    this.total = this.energy + creature_energy
+    if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
+    if (Number.isNaN(this.energy) || typeof this.energy !== 'number') console.log('Energy', typeof this.energy)
+    // Acceptable Error Threshold when dealing with floating energy costs
+    if (this.total > 1000.1 || this.total < 999.9) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
+  }
+
   step() {
     this.waiting()
-    let creature_energy = 0
     for (let bloop_name in this.bloops) {
       let b = this.bloops[bloop_name]
       // this.kill(b)
@@ -315,9 +336,7 @@ class World {
         if (b.state) {
           let child = this.reproduce(b)
           if (child && this.bloops[child.features.name]) {
-            console.log(child)
             b.features.health -= child.features.health
-            creature_energy += child.features.health
           }
         }
         // Handle Actions
@@ -328,20 +347,9 @@ class World {
         if (b.features.health < 0) {
           log(`${tag} WARNING - ${b.features.name} has negative health!`)
         }
-        // Only calculate energy of the living...
-        if (typeof b.features.health === 'number' && Number.isNaN(b.features.health) === false) {
-          creature_energy += b.features.health
-        } else {
-          console.log('Invalid Creature Energy', b.features.health)
-        }
       }
     }
-    this.total = this.energy + creature_energy
-    if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
-    if (Number.isNaN(this.energy) || typeof this.energy !== 'number') console.log('Energy', typeof this.energy)
-
-    // Acceptable Error Threshold when dealing with floating energy costs
-    if (this.total > 1000.1 || this.total < 999.9) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
+    this.balanceEnergy()
   }
 
   handleAgent(obj) {
