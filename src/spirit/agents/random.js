@@ -84,7 +84,6 @@ class Agent {
             // assignment : {creature: object, agent: string}
             else if (msg.creature && this.name === msg.agent) {
                 log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 1)
-                console.log(this.state.creature)
                 this.state.creature = msg.creature
             }
             else if (this.state.creature) {

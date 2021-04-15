@@ -252,16 +252,40 @@ class World {
    */
   act(b) {
     log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
-    let full_observation = this.observation(b)
     let cost = random(0, 1)
-    if (cost < 0) console.log(cost)
-    if (this.bloops[b.features.name]) {
+    if (cost > 0 && cost <= b.features.health) {
+      let full_observation = this.observation(b)
       b.spin(full_observation, cost)
-      this.bloops[b.features.name].features.health -= cost
+      b.features.health -= cost
       this.energy += cost // "pay" world the cost of the action
       send(b.agent, { state: b.state })
     }
+    // TODO: send back failed actions?
     b.reset()
+  }
+
+  kill(b) {
+    let threshold = random(0, 1)
+    if (threshold > 0.99) {
+      log(`${tag} Randomly Killing ${b.features.name}`, 1)
+      this.energy += b.features.health
+      b.features.health = 0
+    }
+  }
+
+  /**
+   * Test floating costs with explict conservation
+   * @param {*} b 
+   */
+  test(b) {
+    let cost = random(0, 1)
+    if (cost <= b.features.health) {
+      // console.log(typeof cost, cost)
+      let new_energy = this.energy + cost
+      let new_health = b.features.health - cost
+      b.features.health = new_health
+      this.energy = new_energy
+    }
   }
 
   step() {
@@ -269,6 +293,7 @@ class World {
     let creature_energy = 0
     for (let bloop_name in this.bloops) {
       let b = this.bloops[bloop_name]
+      // this.kill(b)
       let death = this.dead(b)
       if (death === true) {
         send(b.agent, { dead: b })
@@ -283,12 +308,18 @@ class World {
         if (b.action.choice > 0) {
           this.act(b)
         }
+
+        if (b.features.health < 0) {
+          log(`${tag} WARNING - ${b.features.name} has negative health!`)
+        }
         // Only calculate energy of the living...
         creature_energy += b.features.health
       }
 
     }
-    if (this.energy + creature_energy !== 1000.0) log(`${tag} Total : ${creature_energy + this.energy} | Available ${this.energy}`, 1)
+    let total = this.energy + creature_energy
+    // Acceptable Error Threshold when dealing with floating energy costs
+    if (total > 1000.1 || total < 999.8) log(`${tag} ERROR - Energy out of bounds! - Total : ${total} | Available ${this.energy}`, 1)
   }
 
   handleAgent(obj) {
