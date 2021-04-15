@@ -198,8 +198,7 @@ class World {
     child.reset()
     child.features.generation = b.features.generation + 1
     child.features.parent = b.features.id
-    child.features.id = len(this.bloops)
-    // TODO: update naming so parents can spawn multiple children
+    child.features.id = randint(0, len(this.bloops)) // TODO: make unique?
     child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
     return child
   }
@@ -305,6 +304,7 @@ class World {
   }
 
   balanceEnergy() {
+    //TODO: can optimize by doing it in bloop for loop in step()
     let creature_energy = 0
     let creatures = Object.values(this.bloops)
     creatures.forEach(creature => {
