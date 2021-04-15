@@ -120,11 +120,9 @@ class World {
 
   populate(agent, i) {
     // Spawn a population
-    let initial_population = 5
-    let threshold = 0
+    let initial_population = 7
     // to spawn a single generation add this `this.generation < initial_population` to the following if statement
-    if (this.energy > 0 && len(this.bloops) < initial_population && this.queue.length > initial_population) threshold = this.odds
-    if (threshold >= this.odds) {
+    if (this.energy > 0 && len(this.bloops) < initial_population && this.queue.length > 0) {
       // Populate world if there are no creatures
       log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, 1)
       let bloop = this.addCreature(agent.name)
@@ -158,7 +156,7 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       // console.log("Agent Back to Queue:", this.agents[agentIndex])
       this.agents.splice(agentIndex, 1)
-      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
+      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
       return true
     }
     // Handle Death when no new action for this step...
@@ -166,7 +164,7 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       this.agents.splice(agentIndex, 1)
       if (b.features.health > 0.0) this.energy += b.features.health
-      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 0)
+      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
       return true
     }
     // Check Nearly dead
@@ -178,66 +176,65 @@ class World {
     else return false
   }
 
+  selectAgent(chosen) {
+    if (this.queue.length > 0) {
+      //randomly pick an agent from the queue
+      let agent = this.queue[chosen]
+      log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
+      return agent
+    }
+    return false
+  }
+
+  addChild(b, child) {
+
+  }
+
+  spawnChild(b, energy) {
+    // Asexual - "nearby" is the trigger to reproduce, see Select() module
+    let parent_dna = b.features.dna.copy()
+    let child_dna = new DNA(parent_dna.mutate(.02))
+    let child = this.manifest(this.modulate(new Bloop(child_dna, energy)))
+    child.reset()
+    child.features.generation = b.features.generation + 1
+    child.features.parent = b.features.id
+    child.features.id = len(this.bloops)
+    child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
+    return child
+  }
+
   reproduce(b) {
-    let return_energy = 0
+    // selection {mate: {creature.features}, payment: {int}}
+    let child = false
     if (b.state.selection && Object.keys(b.state.selection).length > 0) {
-      log(`${tag} Reproducing: ${b.state.selection}`, 0)
-      // selection {mate: {creature.features}, payment: {int}}
-
-      let parent_dna = b.features.dna.copy()
-      let child_dna = new DNA(parent_dna.mutate(.02))
-      // Asexual - "nearby" is the trigger to reproduce, see Select() module
-
-      if (this.queue.length > 0) {
-        //randomly pick an agent from the queue
-        let chosen = this.queue.length - 1
-        let agent = this.queue[chosen]
-        log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
-
-        let payment = b.state.selection.payment
-        let divine_energy = randint(0, this.energy)
-
-        if (agent && divine_energy < this.energy && payment > 0 && payment < b.features.health) {
-          //modified spawn
-          let health = divine_energy + payment
-          let child = this.manifest(this.modulate(new Bloop(child_dna, health)))
-          child.reset()
-          child.features.generation = b.features.generation + 1
-          child.features.parent = b.features.id
-          child.features.id = len(this.bloops)
-          child.features.name = `${child.features.generation}_${child.features.parent}_${child.features.id}`
-          // modified addCreature
-          child.agent = agent.name
-          let response = { creature: child, agent: agent.name }
-          // TODO: Establish that an agent is ready to run creature, otherwise creature may die next step
-          if (child && child.features.name) {
-            this.addAgent(agent.name)
-            this.queue.splice(chosen, 1)
-            send(agent.name, JSON.stringify(response))
-            this.bloops[child.features.name] = child
-            log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | payment ${payment} | health ${child.features.health}`, 1)
-            if(this.bloops[child.features.name]) {
-              console.log(this.bloops[child.features.name])
-              this.conserve(divine_energy)
-              b.features.health -= payment
-            } else {
-              log(`${tag} Reproducing: Child Not added spawned: ${child.features.name}`, 1)
-            }
-            return_energy = health
+      log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, 0)
+      let chosen = this.queue.length - 1
+      let agent = this.selectAgent(chosen)
+      let health = randint(1, b.features.health) // test randomly selected health payment
+      if (agent) {
+        // let  = randint(0, this.energy)
+        child = this.spawnChild(b, health)
+        child.agent = agent.name
+        let response = { creature: child, agent: agent.name }
+        if (child.features.health !== health) {
+          log(`${tag} Reproducing: Unable to Spawn, energy mis-match ${health} !== ${child.features.health}`, 1)
+        } else if (child && child.features.name) {
+          this.addAgent(agent.name)
+          this.queue.splice(chosen, 1)
+          send(agent.name, JSON.stringify(response))
+          this.bloops[child.features.name] = child
+          if (child.features.health === health && this.bloops[child.features.name]) {
+            log(`${tag} Reproducing: Parent ${b.features.name} spawned child: ${child.features.name} | health ${child.features.health}`, 1)
+          } else {
+            log(`${tag} Reproducing: Child Not added: ${child.features.name}`, 1)
           }
-          else {
-            log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `, 1)
-          }
-          
         }
-        b.state.selection = null
+        else {
+          log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `, 1)
+        }
       }
-      // Sexual
-      // TODO: decide if mating is reciprocal
-      // upon selection this sends reproduction request to creature by name
-      // let mate = this.seekCreature(b.state.selection.mate.name)
-      // the creature then sends this mate request to agent...
-      return return_energy
+      b.state.selection = null
+      return child
     }
   }
 
@@ -316,13 +313,18 @@ class World {
       else {
         // Handle State
         if (b.state) {
-          this.reproduce(b)
-
+          let child = this.reproduce(b)
+          if (child && this.bloops[child.features.name]) {
+            console.log(child)
+            b.features.health -= child.features.health
+            creature_energy += child.features.health
+          }
         }
         // Handle Actions
         if (b.action.choice > 0) {
           this.act(b)
         }
+        // Handle Energy Conservation
         if (b.features.health < 0) {
           log(`${tag} WARNING - ${b.features.name} has negative health!`)
         }
@@ -333,7 +335,6 @@ class World {
           console.log('Invalid Creature Energy', b.features.health)
         }
       }
-
     }
     this.total = this.energy + creature_energy
     if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
