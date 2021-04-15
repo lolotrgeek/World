@@ -81,7 +81,6 @@ listen(msg => {
         }
 
         if (typeof msg.world === 'object') {
-            let creature_energy = 0
             let bloops = typeof msg.world.bloops === 'object' ? Object.values(msg.world.bloops) : null
 
             if (bloops) {                
@@ -89,7 +88,6 @@ listen(msg => {
                 world.bloops = bloops
                 clear(creatures_alive)
                 world.bloops.map(bloop => {
-                    creature_energy += bloop.features.health
                     creatures_alive.appendChild(block(text(`${bloop.features.name}`)))
                     creatures_alive.appendChild(block(text(`${bloop.features.health}`)))
                     creatures_alive.appendChild(block(text(`${Math.round(bloop.state.position.x)}`)))
@@ -126,7 +124,7 @@ listen(msg => {
             if(typeof msg.world.energy === 'number') {
                 clear(world_stats_div)
                 world_stats_div.appendChild(block(text(`Available Energy : ${msg.world.energy}`)))
-                world_stats_div.appendChild(block(text(`Total Energy : ${creature_energy + msg.world.energy}`)))
+                world_stats_div.appendChild(block(text(`Total Energy : ${msg.world.total}`)))
             }            
         }
         else if (msg.action) {

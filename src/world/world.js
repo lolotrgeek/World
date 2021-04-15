@@ -13,6 +13,7 @@ class World {
     this.size = size
     this.odds = odds
     this.energy = energy
+    this.total = 0
     this.generation = 0 // only tracks generation of creatures spawned by world
     this.bloops = {}
     this.worlds = []
@@ -157,7 +158,7 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       // console.log("Agent Back to Queue:", this.agents[agentIndex])
       this.agents.splice(agentIndex, 1)
-      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
+      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 0)
       return true
     }
     // Handle Death when no new action for this step...
@@ -165,7 +166,7 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       this.agents.splice(agentIndex, 1)
       if (b.features.health > 0.0) this.energy += b.features.health
-      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
+      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 0)
       return true
     }
     // Check Nearly dead
@@ -178,6 +179,7 @@ class World {
   }
 
   reproduce(b) {
+    let return_energy = 0
     if (b.state.selection && Object.keys(b.state.selection).length > 0) {
       log(`${tag} Reproducing: ${b.state.selection}`, 0)
       // selection {mate: {creature.features}, payment: {int}}
@@ -191,10 +193,13 @@ class World {
         let chosen = this.queue.length - 1
         let agent = this.queue[chosen]
         log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
-        if (agent) {
+
+        let payment = b.state.selection.payment
+        let divine_energy = randint(0, this.energy)
+
+        if (agent && divine_energy < this.energy && payment > 0 && payment < b.features.health) {
           //modified spawn
-          let divine_energy = randint(0, this.energy)
-          let health = divine_energy + b.state.selection.payment
+          let health = divine_energy + payment
           let child = this.manifest(this.modulate(new Bloop(child_dna, health)))
           child.reset()
           child.features.generation = b.features.generation + 1
@@ -209,22 +214,22 @@ class World {
             this.addAgent(agent.name)
             this.queue.splice(chosen, 1)
             send(agent.name, JSON.stringify(response))
-            // conserve - global energy
-            this.energy -= divine_energy
-            // conserve - paid health of parent into child health
-            this.bloops[b.features.name].features.health -= b.state.selection.payment
             this.bloops[child.features.name] = child
-            log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | health ${child.features.health}`, 1)
+            log(`${tag} Reproducing: Parent ${b.features.name} spawned Child: ${child.features.name} | payment ${payment} | health ${child.features.health}`, 1)
+            if(this.bloops[child.features.name]) {
+              console.log(this.bloops[child.features.name])
+              this.conserve(divine_energy)
+              b.features.health -= payment
+            } else {
+              log(`${tag} Reproducing: Child Not added spawned: ${child.features.name}`, 1)
+            }
+            return_energy = health
           }
           else {
             log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `, 1)
           }
-
+          
         }
-
-        // check for child in bloops?
-        // console.log(this.bloops.map(bloop => bloop.features.name))
-
         b.state.selection = null
       }
       // Sexual
@@ -232,6 +237,7 @@ class World {
       // upon selection this sends reproduction request to creature by name
       // let mate = this.seekCreature(b.state.selection.mate.name)
       // the creature then sends this mate request to agent...
+      return return_energy
     }
   }
 
@@ -253,17 +259,25 @@ class World {
   act(b) {
     log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
     let cost = random(0, 1)
-    if (cost > 0 && cost <= b.features.health) {
+    if (cost > b.features.health) {
+      // death blow - cost too high for health so it kills the creature
+      this.energy += b.features.health
+      b.features.health = 0
+    }
+    else if (cost <= b.features.health) {
       let full_observation = this.observation(b)
       b.spin(full_observation, cost)
       b.features.health -= cost
       this.energy += cost // "pay" world the cost of the action
       send(b.agent, { state: b.state })
     }
-    // TODO: send back failed actions?
     b.reset()
   }
 
+  /**
+   * Test randomly killing a creature
+   * @param {*} b 
+   */
   kill(b) {
     let threshold = random(0, 1)
     if (threshold > 0.99) {
@@ -302,24 +316,31 @@ class World {
       else {
         // Handle State
         if (b.state) {
-          // this.reproduce(b)
+          this.reproduce(b)
+
         }
         // Handle Actions
         if (b.action.choice > 0) {
           this.act(b)
         }
-
         if (b.features.health < 0) {
           log(`${tag} WARNING - ${b.features.name} has negative health!`)
         }
         // Only calculate energy of the living...
-        creature_energy += b.features.health
+        if (typeof b.features.health === 'number' && Number.isNaN(b.features.health) === false) {
+          creature_energy += b.features.health
+        } else {
+          console.log('Invalid Creature Energy', b.features.health)
+        }
       }
 
     }
-    let total = this.energy + creature_energy
+    this.total = this.energy + creature_energy
+    if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
+    if (Number.isNaN(this.energy) || typeof this.energy !== 'number') console.log('Energy', typeof this.energy)
+
     // Acceptable Error Threshold when dealing with floating energy costs
-    if (total > 1000.1 || total < 999.8) log(`${tag} ERROR - Energy out of bounds! - Total : ${total} | Available ${this.energy}`, 1)
+    if (this.total > 1000.1 || this.total < 999.9) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
   }
 
   handleAgent(obj) {
