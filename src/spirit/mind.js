@@ -1,4 +1,4 @@
-// A Proxy for the Spirit world 
+// A Proxy for the Godhead - a single mind environment that splits itself into agents
 // ("agent land")
 
 // spawning agents and tracking used ports
