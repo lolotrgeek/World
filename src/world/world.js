@@ -9,16 +9,31 @@ const tag = "[World]"
 
 class World {
   constructor(energy = 1000, odds = 0.005, size = { x: 500, y: 500 }) {
+    // General Params
     this.speed = 100
     this.size = size
     this.odds = odds
+    this.worlds = [] // list of connected "world" clients
+
+    // Energy Params
     this.energy = energy
-    this.total = 0
-    this.generation = 0 // only tracks generation of creatures spawned by world
-    this.bloops = {}
-    this.worlds = []
+    this.total = 0 
+    this.error_ceiling = energy + 0.1 // max energy allowed to overflow
+    this.error_floor = energy - 0.9 // min energy allowed to leak
+
+    // Agent Params
     this.agents = []
     this.queue = [] // agents waiting for a creature to spawn
+    this.agent_death = 3
+    this.agent_dying = 2 // must be smaller than agent_death value
+
+    // Creature Params
+    this.bloops = {}
+    this.initial_population = 7
+    this.generation = 0 // only tracks generation of creatures spawned by world
+    this.modules = [new Module(), new Select, new Look(), new Move()]
+    this.mutation = .02
+    this.observation_limit = 5
   }
 
   addAgent(agent) {
@@ -36,9 +51,9 @@ class World {
   manifest(b) {
     // set initial state of creature
     if (!b.state.position) b.state.position = { x: random(this.size.x), y: random(this.size.y) }
-    if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.features.dna.genes[0], 0, 1, 15, 0)
-    if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50)
-    if (!b.state.visual_space) b.state.visual_space = b.state.skin * 5 // observation limits
+    if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.features.dna.genes[0], 0, 1, 15, 0) // mapping size gene to set max speed
+    if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50) // mapping size gene to set skin
+    if (!b.state.visual_space) b.state.visual_space = b.state.skin * this.observation_limit
     if (!b.state.nearby) b.state.nearby = []
     if (!b.state.selection) b.state.selection = {}
     return b
@@ -46,10 +61,9 @@ class World {
 
   modulate(b) {
     // attach modules to the creature
-    let modules = [new Module(), new Select, new Look(), new Move()]
-    if (modules.length <= b.slots) {
-      b.modules = modules
-      b.slots -= modules.length
+    if (this.modules.length <= b.slots) {
+      b.modules = this.modules
+      b.slots -= this.modules.length
     }
     //TODO: handle trying to attach too many modules
     return b
@@ -78,7 +92,7 @@ class World {
   }
 
   cost(action) {
-    // TODO: factor environmental forces into cost
+    // TODO: factor environmental forces and tasks into cost
     let cost = random(0, 1)
     this.energy += cost
     return cost
@@ -120,9 +134,8 @@ class World {
 
   populate(agent, i) {
     // Spawn a population
-    let initial_population = 7
-    // to spawn a single generation add this `this.generation < initial_population` to the following if statement
-    if (this.energy > 0 && len(this.bloops) < initial_population && this.queue.length > 0) {
+    // to spawn a single generation add this `this.generation < this.initial_population` to the following if statement
+    if (this.energy > 0 && len(this.bloops) < this.initial_population && this.queue.length > 0) {
       // Populate world if there are no creatures
       log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, 0)
       let bloop = this.addCreature(agent.name)
@@ -142,7 +155,7 @@ class World {
       log(`${tag} Agent Waiting, ${agent.name}`, 0)
       // Handle Disconnected Agents
 
-      if (Date.now() - agent.time > this.speed * 2) {
+      if (Date.now() - agent.time > this.speed * this.agent_death) {
         log(`${tag} Agent ${agent.name} in queue is dead.`, 0)
         this.queue.splice(i, 1)
       }
@@ -160,7 +173,7 @@ class World {
       return true
     }
     // Handle Death when no new action for this step...
-    else if (Date.now() - b.action.last_action > this.speed * 5) {
+    else if (Date.now() - b.action.last_action > this.speed * this.agent_death) {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       this.agents.splice(agentIndex, 1)
       if (b.features.health > 0.0) this.energy += b.features.health
@@ -168,7 +181,7 @@ class World {
       return true
     }
     // Check Nearly dead
-    else if (Date.now() - b.action.last_action > this.speed * 3) {
+    else if (Date.now() - b.action.last_action > this.speed * this.agent_dying) {
       log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, 0)
       send(b.agent, { dying: b })
       return false
@@ -178,7 +191,6 @@ class World {
 
   selectAgent(chosen) {
     if (this.queue.length > 0) {
-      //randomly pick an agent from the queue
       let agent = this.queue[chosen]
       log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
       return agent
@@ -186,14 +198,10 @@ class World {
     return false
   }
 
-  addChild(b, child) {
-
-  }
-
   spawnChild(b, energy) {
     // Asexual - "nearby" is the trigger to reproduce, see Select() module
     let parent_dna = b.features.dna.copy()
-    let child_dna = new DNA(parent_dna.mutate(.02))
+    let child_dna = new DNA(parent_dna.mutate(this.mutation))
     let child = this.manifest(this.modulate(new Bloop(child_dna, energy)))
     child.reset()
     child.features.generation = b.features.generation + 1
@@ -203,16 +211,22 @@ class World {
     return child
   }
 
+  /**
+   * Convert a stateful selection into a Creature with agency.
+   * @ref `selection {mate: {creature.features}, payment: {int}}`
+   * @param {*} b 
+   * @returns 
+   */
   reproduce(b) {
-    // selection {mate: {creature.features}, payment: {int}}
     let child = false
     if (b.features.health > 1 && b.state.selection && Object.keys(b.state.selection).length > 0) {
+
       log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, 0)
-      let chosen = this.queue.length - 1
+      let chosen = this.queue.length - 1 // TODO: choose agent based on different critera?
       let agent = this.selectAgent(chosen)
-      let health = randint(1, b.features.health) // test randomly selected health payment
+      let health = randint(1, b.features.health) // TODO: move to divine energy model?
+      
       if (agent) {
-        // let  = randint(0, this.energy)
         child = this.spawnChild(b, health)
         if (this.bloops[child.features.name]) {
           log(`${tag} Reproducing: Unable to Spawn, already exists ${child.features.name}`, 1)
@@ -259,7 +273,7 @@ class World {
    */
   act(b) {
     log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
-    let cost = random(0, 1)
+    let cost = random(0, 1) // TODO: environmental factors for cost, task based
     if (cost > b.features.health) {
       // death blow - cost too high for health so it kills the creature
       this.energy += b.features.health
@@ -276,7 +290,7 @@ class World {
   }
 
   /**
-   * Test randomly killing a creature
+   * Randomly kill a creature
    * @param {*} b 
    */
   kill(b) {
@@ -292,7 +306,7 @@ class World {
    * Test floating costs with explict conservation
    * @param {*} b 
    */
-  test(b) {
+  testCost(b) {
     let cost = random(0, 1)
     if (cost <= b.features.health) {
       // console.log(typeof cost, cost)
@@ -303,7 +317,10 @@ class World {
     }
   }
 
-  balanceEnergy() {
+  /**
+   * Check Total energy in system by checking creature health and available energy against acceptable error bounds
+   */
+  checkEnergy() {
     //TODO: can optimize by doing it in bloop for loop in step()
     let creature_energy = 0
     let creatures = Object.values(this.bloops)
@@ -318,7 +335,7 @@ class World {
     if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
     if (Number.isNaN(this.energy) || typeof this.energy !== 'number') console.log('Energy', typeof this.energy)
     // Acceptable Error Threshold when dealing with floating energy costs
-    if (this.total > 1000.1 || this.total < 999.9) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
+    if (this.total > this.error_ceiling|| this.total < this.error_floor) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
   }
 
   step() {
@@ -336,7 +353,7 @@ class World {
         if (b.state) {
           let child = this.reproduce(b)
           if (child && this.bloops[child.features.name]) {
-            b.features.health -= child.features.health
+            b.features.health -= child.features.health // TODO: move this into reproduce() ?
           }
         }
         // Handle Actions
@@ -349,7 +366,7 @@ class World {
         }
       }
     }
-    this.balanceEnergy()
+    this.checkEnergy()
   }
 
   handleAgent(obj) {
