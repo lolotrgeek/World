@@ -16,12 +16,12 @@ Object.defineProperty(Array.prototype, 'forEachRev', {
 /**
  * find the first occurance of int in array
  */
- Object.defineProperty(Array.prototype, 'findint', {
+Object.defineProperty(Array.prototype, 'findint', {
   value: function (value) {
     let found = false
     for (let i = 0; i < this.length; i++) {
       element = this[i]
-      if(element === value) {
+      if (element === value) {
         found = element
         break
       }
@@ -34,13 +34,13 @@ Object.defineProperty(Array.prototype, 'forEachRev', {
  * Remove element(s) from array
  * @returns array
  */
-Array.prototype.remove = function() {
+Array.prototype.remove = function () {
   var what, a = arguments, L = a.length, ax;
   while (L && this.length) {
-      what = a[--L]
-      while ((ax = this.indexOf(what)) !== -1) {
-          this.splice(ax, 1)
-      }
+    what = a[--L]
+    while ((ax = this.indexOf(what)) !== -1) {
+      this.splice(ax, 1)
+    }
   }
   return this
 }
@@ -62,7 +62,7 @@ Array.max = function (array) {
  * @param  {Number} high maximum limit
  * @return {Number}      constrained number
  */
-let constrain = function(n, low, high) {
+let constrain = function (n, low, high) {
   return Math.max(Math.min(n, high), low);
 };
 
@@ -77,7 +77,7 @@ let constrain = function(n, low, high) {
  * @return {Number}        remapped number
  * @returns 
  */
-Math.map = function(n, start1, stop1, start2, stop2, withinBounds) {
+Math.map = function (n, start1, stop1, start2, stop2, withinBounds) {
   const newval = (n - start1) / (stop1 - start1) * (stop2 - start2) + start2;
   if (!withinBounds) {
     return newval;
@@ -89,8 +89,8 @@ Math.map = function(n, start1, stop1, start2, stop2, withinBounds) {
   }
 };
 
-global.random = function(min, max) {
-  let rand= Math.random();
+global.random = function (min, max) {
+  let rand = Math.random();
   if (typeof min === 'undefined') {
     return rand;
   } else if (typeof max === 'undefined') {
@@ -118,17 +118,27 @@ global.randint = function randint(min, max) {
 
 /**
  * 
- * @param {string} msg - string to log
- * @param {number} level - `0` hide logs, ` default - 1` show logs
+ * @param {string} msg string to log
+ * @param {object} options
+ * @param {string} options.level `info` | `debug` | `error`
+ * @param {string} options.namespace an assigned namespace to segment the logs   
+ * @param {number} options.show `false` - hide | `true` - display
  */
-global.log = function log(msg, level=1) {
-  if (LOGGING === true) {
-    let entry = '\n' + `[${new Date().toLocaleString()}] - ${msg}`
-    fs.appendFile('./logs/serverlog.txt', entry, (err) => {
-      if (err) console.log(err);
-    });
-  } else if(LOGGING === false && level === 1) {
-    console.log(msg)
+global.log = function log(msg, {namespace='default', level = 'info', show = true} = {}) {
+  if (LOGGING === 'file') {
+    let entry = '\n' + `${level} - ${new Date().toLocaleString()} - ${msg}`
+    fs.appendFile('./logs/log.txt', entry, (err) => {
+      if (err) console.log(err)
+    })
+  } 
+  else if (LOGGING === 'info' && level === 'info' && show === true) console.log(msg)
+  else if (LOGGING === 'debug' && level === 'debug' && show === true) console.debug(msg)
+  else if (LOGGING === 'error' && level === 'error' && show === true) console.error(msg)
+  else if (LOGGING === 'all' && show === true) console.log(msg)
+  else if (LOGGING === namespace && show === true) console.log(msg)
+  else if (Array.isArray(LOGGING) && show === true) {
+    let found = LOGGING.find(namedspace => namespace === namedspace)
+    if (found) console.log(msg)
   }
 }
 global.getObject = function getObject(string) {
@@ -169,7 +179,7 @@ let perlin
  * @return {Number}     Perlin noise value (between 0 and 1) at specified
  *                      coordinates
  */
-global.noise = function noise (x, y = 0, z = 0) {
+global.noise = function noise(x, y = 0, z = 0) {
   if (perlin == null) {
     perlin = new Array(PERLIN_SIZE + 1);
     for (let i = 0; i < PERLIN_SIZE + 1; i++) {

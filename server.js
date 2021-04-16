@@ -5,7 +5,7 @@ const cors = require('cors')
 const app = express()
 app.use(cors())
 
-LOGGING = false
+LOGGING = 'debug'
 const HTTP_PORT = 8000
 const tag = "[Server]"
 

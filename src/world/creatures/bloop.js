@@ -41,8 +41,8 @@ class Bloop {
     // if (result !== this.state.position) console.log('Moving: from', this.state.position, ' to', result)
     // else console.log('Same ', result)
     if (newstate.length > 0) newstate.forEach(key => this.state[key] = result[key])
-    log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}, health:${this.health}`, 0)
-    if(this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`, 1)
+    log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}, health:${this.health}`, {show: false})
+    if(this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`)
   }
 
   reset() {

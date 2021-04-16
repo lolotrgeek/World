@@ -38,7 +38,7 @@ class World {
 
   addAgent(agent) {
     this.agents.push(agent)
-    log(`${tag} AGENT ADDED`, 0)
+    log(`${tag} AGENT ADDED`, {show: false})
     return
   }
 
@@ -71,7 +71,7 @@ class World {
 
   spawn(health, dna = new DNA()) {
     // set initial features of creature
-    log(`${tag} Spawning : ${health}`, 0)
+    log(`${tag} Spawning : ${health}`, {show: false})
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
     bloop.features.generation = this.generation
@@ -87,7 +87,7 @@ class World {
 
   conserve(energy) {
     this.energy -= energy
-    log(`${tag} Conserving : ${energy} of ${this.energy}`, 0)
+    log(`${tag} Conserving : ${energy} of ${this.energy}`, {show: false})
 
   }
 
@@ -106,11 +106,11 @@ class World {
         this.conserve(health)
         bloop.agent = agent
         this.bloops[bloop.features.name] = bloop
-        log(`${tag} Adding Creature ${bloop.features.name}`, 0)
+        log(`${tag} Adding Creature ${bloop.features.name}`, {show: false})
         return bloop
       }
       else {
-        log(`${tag} Invalid Creature ${JSON.stringify(bloop)}`, 1)
+        log(`${tag} Invalid Creature ${JSON.stringify(bloop)}`)
         return null
       }
     }
@@ -128,7 +128,7 @@ class World {
       return { creature: null }
     }
 
-    log(`${tag} Seeking name ${name}`, 0)
+    log(`${tag} Seeking name ${name}`, {show: false})
     return { creature: this.bloops[name] }
   }
 
@@ -137,7 +137,7 @@ class World {
     // to spawn a single generation add this `this.generation < this.initial_population` to the following if statement
     if (this.energy > 0 && len(this.bloops) < this.initial_population && this.queue.length > 0) {
       // Populate world if there are no creatures
-      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, 0)
+      log(`${tag} Threshold passed! Spawning ${agent.name} / ${this.generation}`, {show: false})
       let bloop = this.addCreature(agent.name)
       let response = { creature: bloop, agent: agent.name }
       if (bloop) {
@@ -152,11 +152,11 @@ class World {
   waiting() {
     // check for agents waiting for a creature
     this.queue.forEachRev((agent, i) => {
-      log(`${tag} Agent Waiting, ${agent.name}`, 0)
+      log(`${tag} Agent Waiting, ${agent.name}`, {show: false})
       // Handle Disconnected Agents
 
       if (Date.now() - agent.time > this.speed * this.agent_death) {
-        log(`${tag} Agent ${agent.name} in queue is dead.`, 0)
+        log(`${tag} Agent ${agent.name} in queue is dead.`, {show: false})
         this.queue.splice(i, 1)
       }
       this.populate(agent, i)
@@ -169,7 +169,7 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       // console.log("Agent Back to Queue:", this.agents[agentIndex])
       this.agents.splice(agentIndex, 1)
-      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`, 1)
+      log(`${tag} Creature ${b.features.name} Died from 0 Health. ${b.features.health}`)
       return true
     }
     // Handle Death when no new action for this step...
@@ -177,12 +177,12 @@ class World {
       let agentIndex = this.agents.findIndex(agent => agent === b.agent)
       this.agents.splice(agentIndex, 1)
       if (b.features.health > 0.0) this.energy += b.features.health
-      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`, 1)
+      log(`${tag} Creature ${b.features.name} Died from No agent. Health: ${b.features.health} |  Actions: ${b.actions.length}`)
       return true
     }
     // Check Nearly dead
     else if (Date.now() - b.action.last_action > this.speed * this.agent_dying) {
-      log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, 0)
+      log(`${tag} Creature ${b.features.name} Nearly Dead! Health: ${b.features.health} | Actions: ${b.actions.length}`, {show: false})
       send(b.agent, { dying: b })
       return false
     }
@@ -192,7 +192,7 @@ class World {
   selectAgent(chosen) {
     if (this.queue.length > 0) {
       let agent = this.queue[chosen]
-      log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, 0)
+      log(`${tag} chosen ${chosen} , agent ${JSON.stringify(agent)}`, {show: false})
       return agent
     }
     return false
@@ -221,7 +221,7 @@ class World {
     let child = false
     if (b.features.health > 1 && b.state.selection && Object.keys(b.state.selection).length > 0) {
 
-      log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, 0)
+      log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, {show: false})
       let chosen = this.queue.length - 1 // TODO: choose agent based on different critera?
       let agent = this.selectAgent(chosen)
       let health = randint(1, b.features.health) // TODO: move to divine energy model?
@@ -229,26 +229,26 @@ class World {
       if (agent) {
         child = this.spawnChild(b, health)
         if (this.bloops[child.features.name]) {
-          log(`${tag} Reproducing: Unable to Spawn, already exists ${child.features.name}`, 1)
+          log(`${tag} Reproducing: Unable to Spawn, already exists ${child.features.name}`)
           return false
         }
         child.agent = agent.name
         let response = { creature: child, agent: agent.name }
         if (child.features.health !== health) {
-          log(`${tag} Reproducing: Unable to Spawn, energy mis-match ${health} !== ${child.features.health}`, 1)
+          log(`${tag} Reproducing: Unable to Spawn, energy mis-match ${health} !== ${child.features.health}`)
         } else if (child && child.features.name) {
           this.addAgent(agent.name)
           this.queue.splice(chosen, 1)
           send(agent.name, JSON.stringify(response))
           this.bloops[child.features.name] = child
           if (child.features.health === health && this.bloops[child.features.name]) {
-            log(`${tag} Reproducing: Parent ${b.features.name} spawned child: ${child.features.name} | health ${child.features.health}`, 1)
+            log(`${tag} Reproducing: Parent ${b.features.name} spawned child: ${child.features.name} | health ${child.features.health}`)
           } else {
-            log(`${tag} Reproducing: Child Not added: ${child.features.name}`, 1)
+            log(`${tag} Reproducing: Child Not added: ${child.features.name}`)
           }
         }
         else {
-          log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `, 1)
+          log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `)
         }
       }
       b.state.selection = null
@@ -272,7 +272,7 @@ class World {
    * @param {Object} b.action `{ choice: int, params: [], last_action: int }`  
    */
   act(b) {
-    log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, 0)
+    log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, {show: false})
     let cost = random(0, 1) // TODO: environmental factors for cost, task based
     if (cost > b.features.health) {
       // death blow - cost too high for health so it kills the creature
@@ -296,7 +296,7 @@ class World {
   kill(b) {
     let threshold = random(0, 1)
     if (threshold > 0.99) {
-      log(`${tag} Randomly Killing ${b.features.name}`, 1)
+      log(`${tag} Randomly Killing ${b.features.name}`)
       this.energy += b.features.health
       b.features.health = 0
     }
@@ -328,14 +328,14 @@ class World {
       if (typeof creature.features.health === 'number' && creature.features.health > 0.0) {
         creature_energy += creature.features.health
       } else {
-        console.log('Invalid Creature Energy', creature.features.health)
+        log(`Invalid Creature Energy, ${creature.features.health}`, {show: false})
       }
     })
     this.total = this.energy + creature_energy
     if (Number.isNaN(this.total) || typeof this.total !== 'number') console.log('Total', typeof this.total, 'Creatures', creature_energy)
     if (Number.isNaN(this.energy) || typeof this.energy !== 'number') console.log('Energy', typeof this.energy)
     // Acceptable Error Threshold when dealing with floating energy costs
-    if (this.total > this.error_ceiling|| this.total < this.error_floor) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`, 1)
+    if (this.total > this.error_ceiling|| this.total < this.error_floor) log(`${tag} ERROR - Energy out of bounds! - this.total : ${this.total} | Available ${this.energy}`)
   }
 
   step() {
@@ -376,10 +376,10 @@ class World {
     let queued = this.queue.findIndex(agent => agent.name === obj.name)
     let inQueue = queued > -1
     if (!inAgents && !inQueue) {
-      log(`${tag} Adding agent ${obj.name} to queue.`, 0)
+      log(`${tag} Adding agent ${obj.name} to queue.`, {show: false})
       this.queue.push(obj)
     } else if (!inAgents && inQueue) {
-      log(`${tag} Updating agent ${obj.name} in queue.`, 0)
+      log(`${tag} Updating agent ${obj.name} in queue.`, {show: false})
       this.queue[queued] = obj
     }
   }
@@ -395,23 +395,23 @@ class World {
       log(`${tag} No name`)
     }
 
-    log(`${tag} Seeking name ${obj.creature}`, 0)
+    log(`${tag} Seeking name ${obj.creature}`, {show: false})
     creature = this.bloops[obj.creature]
 
     if (creature && creature.agent === obj.agent) {
-      log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, 0)
+      log(`${tag} Action assigment: ${creature.features.name} from ${creature.agent}`, {show: false})
       action.last_action = Date.now()
       creature.action = action
       creature.actions.push(action)
       send(obj.agent, { assigned: action })
     }
     else if (!creature) {
-      log(`${tag} Unfound Creature: ${obj.creature}`, 0)
+      log(`${tag} Unfound Creature: ${obj.creature}`, {show: false})
       //TODO: assume unfound creature is dead?
       send(obj.agent, { dead: { agent: obj.agent } })
     }
     // modify message in the following...
-    log(`${tag} Action: ${obj.creature} : ${JSON.stringify(action)}`, 0)
+    log(`${tag} Action: ${obj.creature} : ${JSON.stringify(action)}`, {show: false})
   }
 
   reset() {

@@ -2,7 +2,7 @@ require('./src/functions')
 
 const { World } = require('./src/world/world')
 const { run } = require('./server')
-LOGGING = false
+LOGGING = 'all' // all, file, info, debug, error
 
 
 let energy = 1000

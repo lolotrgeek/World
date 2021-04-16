@@ -2,7 +2,7 @@ require('../functions')
 const { Agent } = require('./agents/random')
 const { DNA } = require('./agents/dna')
 const { v4: uuidv4 } = require('uuid')
-LOGGING = false
+LOGGING = 'debug'
 
 let port = process.argv[3]
 let agent

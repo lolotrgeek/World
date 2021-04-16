@@ -1,7 +1,7 @@
 require('../functions')
 const { AgentLand } = require('./mind')
 
-LOGGING = false
+LOGGING = 'debug'
 
 let amount = 10
 let heaven = new AgentLand()
