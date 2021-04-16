@@ -5,7 +5,7 @@
 const { fork } = require('child_process')
 const { register, listen, send } = require('./client/client')
 
-const tag = "[Umbra]"
+const tag = "[Mind]"
 
 const portGenerator = () => {
     let ports = []
@@ -42,7 +42,7 @@ class AgentLand {
     }
 
     reset() {
-        register('Umbra')
+        register('Mind')
     }
 
     spin() {

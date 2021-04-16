@@ -1,5 +1,5 @@
 require('../functions')
-const { AgentLand } = require('./umbra')
+const { AgentLand } = require('./mind')
 
 LOGGING = false
 

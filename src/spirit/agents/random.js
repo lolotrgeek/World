@@ -33,8 +33,7 @@ class Agent {
 
     parameterize(amount) {
         let params = []
-        // fill each parameter with a random integer 
-        // eventually this is a decision for a NN
+        // fill each action parameter with a random integer 
         while (amount > params.length) {
             params.push(randint(-2, 2))
         }
@@ -42,13 +41,6 @@ class Agent {
     }
 
     step() {
-        // Check for a non-responsive server
-        // TODO: parameterize death timeout, add retry?
-        // if(Date.now() - this.state.last_message > this.speed * 1000) {
-        //     log(`${tag} lost message, dying.`)
-        //     // TODO: initiate a retry sequence?
-        //     // process.exit()
-        // }
         let msg
         if(this.observations.length > 0) {
             log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, 0 ) 
@@ -62,7 +54,6 @@ class Agent {
             msg = {name: this.name, time: Date.now()} // request a new creature
             log(`${tag} Request Step: ${JSON.stringify(msg)}`, 0)
         }
-        
         send(msg)
         this.observations = [] // only remember last observation  
     }
@@ -83,13 +74,13 @@ class Agent {
             // handle creature assignment
             // assignment : {creature: object, agent: string}
             else if (msg.creature && this.name === msg.agent) {
-                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 1)
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, 0)
                 this.state.creature = msg.creature
             }
             else if (this.state.creature) {
                 if(msg.dying) {
                     if (msg.dying.agent === this.name && this.state.creature.features.name == msg.dying.features.name) {
-                        log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, 1)
+                        log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, 0)
                         // ping back sampled action to avoid dead
                         msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
                         send(msg)
@@ -111,9 +102,7 @@ class Agent {
                     log(`${tag} Action Assigned:  ${msg.assigned}`, 0)
                     this.assigned.push(msg.assigned)
                 }
-                //TODO: handle waiting in queue? other than resending name?
             }
-
         })
     }
 
