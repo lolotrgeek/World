@@ -1,3 +1,5 @@
+// Maximize - have more energy than last step.
+
 const { register, listen, send } = require('../client/client')
 
 const tag = "[Agent]"

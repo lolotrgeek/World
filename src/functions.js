@@ -123,6 +123,8 @@ global.randint = function randint(min, max) {
  * @param {string} options.level `info` | `debug` | `error`
  * @param {string} options.namespace an assigned namespace to segment the logs   
  * @param {number} options.show `false` - hide | `true` - display
+ * @global`LOGGING` : required global variable that sets logging scope 
+ * @global `all`, `none`, `file`, `info`, `debug`, `error` , `[...namespace]`
  */
 global.log = function log(msg, {namespace='default', level = 'info', show = true} = {}) {
   if (LOGGING === 'file') {

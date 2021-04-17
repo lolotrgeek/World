@@ -4,6 +4,6 @@ const { AgentLand } = require('./mind')
 LOGGING = 'debug'
 
 let amount = 10
-let heaven = new AgentLand()
+let mind = new AgentLand()
 
-heaven.populate(amount)
+mind.populate(amount)

@@ -12,6 +12,9 @@ class Module {
     }
 }
 
+/**
+ * Look - Basic Initial Observation (input) Module (BIOM) 
+ */
 class Look extends Module {
     // look for nearby creatures
     constructor() {
@@ -32,6 +35,9 @@ class Look extends Module {
     }
 }
 
+/**
+ * Move - Basic Initial Action (output) Module (BIAM)
+ */
 class Move extends Module {
     constructor() {
         super()
@@ -60,7 +66,9 @@ class Move extends Module {
     }
 }
 
-
+/**
+ * Select - Basic Initial Transaction (output) Module (BATM)
+ */
 class Select extends Module {
     constructor() { 
         super()
@@ -99,6 +107,18 @@ class Replicate extends Module {
         // if replicate -> result is copy of dna (state)
         // log('Replicating!')
         return self.dna.copy()
+    }
+}
+
+/**
+ * Generates an Observation via a feedback mechanism using past observations (world model)
+ */
+class Simulate extends Module {
+    constructor() {
+        super()
+    }
+    spin(self) {
+
     }
 }
 
