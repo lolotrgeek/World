@@ -98,15 +98,21 @@ class Select extends Module {
     }
 }
 
-class Replicate extends Module {
+class Eat extends Module {
     constructor() {
         super()
+        this.params = 2
     }
-
+    /**
+     * this is only expressing the desire to eat another, the `world` has to resolve this transaction
+     * @param {*} self 
+     * @returns 
+     */
     spin(self) {
-        // if replicate -> result is copy of dna (state)
-        // log('Replicating!')
-        return self.dna.copy()
+        let chosen = self.action.params[0] // this is the index of the nearby creature
+        let others = self.state.nearby
+        if(!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return {eat : false}
+        return {eat: others[chosen], transaction: true }
     }
 }
 
@@ -118,8 +124,7 @@ class Simulate extends Module {
         super()
     }
     spin(self) {
-
     }
 }
 
-module.exports = { Module, Look, Move, Select }
+module.exports = { Module, Look, Move, Select, Eat }

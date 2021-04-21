@@ -22,7 +22,7 @@ class Agent {
         this.observations = []
         this.actions = []
         this.assigned = []
-        this.action = { choice: 0, params: [], last_action: Date.now()}
+        this.action = { choice: 0, params: [], last_action: Date.now() }
         this.state = {}
     }
 
@@ -44,17 +44,17 @@ class Agent {
 
     step() {
         let msg
-        if(this.observations.length > 0) {
-            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`) 
-            log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}`) 
+        if (this.observations.length > 0) {
+            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`)
+            log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}`)
         }
         if (this.state.creature) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
             this.actions.push(msg)
-            log(`${tag} Action Step: ${JSON.stringify(msg)}`, {show: false})
+            log(`${tag} Action Step: ${JSON.stringify(msg)}`, { show: false })
         } else {
-            msg = {name: this.name, time: Date.now()} // request a new creature
-            log(`${tag} Request Step: ${JSON.stringify(msg)}`, {show: false})
+            msg = { name: this.name, time: Date.now() } // request a new creature
+            log(`${tag} Request Step: ${JSON.stringify(msg)}`, { show: false })
         }
         send(msg)
         this.observations = [] // only remember last observation  
@@ -70,38 +70,46 @@ class Agent {
         // wait for a creature to spawn... listen for confirmation, then listen for observations
         listen(msg => {
             this.state.last_message = Date.now()
-            if(!msg) {
+            if (!msg) {
                 log(`${tag} Unknown Message ${msg}`)
             }
             // handle creature assignment
             // assignment : {creature: object, agent: string}
             else if (msg.creature && this.name === msg.agent) {
-                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, {show: false})
+                log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, { show: false })
                 this.state.creature = msg.creature
             }
             else if (this.state.creature) {
-                if(msg.dying) {
+                if (msg.dying) {
                     if (msg.dying.agent === this.name && this.state.creature.features.name == msg.dying.features.name) {
-                        log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, {show: false})
-                        // ping back sampled action to avoid dead
-                        msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
-                        send(msg)
+                        log(`${tag} Creature Dying:  ${this.state.creature.features.name}, Received: ${msg.dying.actions.length} Sent: ${this.actions.length} Assigned: ${this.assigned.length}`, { show: false })
+
+                        let decision = randint(-1, 1) // TODO: parameterize
+                        if (decision > 0) {
+                            // ping back, try to avoid dying...
+                            msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
+                            send(msg)
+                        }
+                        else if (decision < 0) {
+                            // ... or abandon the creature and wait for a new one to spawn.
+                            this.state.creature = null
+                        }
                     }
                 }
                 if (msg.dead) {
                     if (msg.dead.agent === this.name) {
-                        log(`${tag} Creature Died:  ${this.state.creature.features.name}`, {show: false})
+                        log(`${tag} Creature Died:  ${this.state.creature.features.name}`, { show: false })
                         this.state.creature = null
                     }
                 }
-                if(msg.state) {
-                    if(typeof msg.state === 'object') {
-                        log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, {show: false})
+                if (msg.state) {
+                    if (typeof msg.state === 'object') {
+                        log(`${tag} Creature Observations, ${JSON.stringify(msg.state)}`, { show: false })
                         this.observations.push(msg.state)
                     }
                 }
-                if(msg.assigned) {
-                    log(`${tag} Action Assigned:  ${msg.assigned}`, {show: false})
+                if (msg.assigned) {
+                    log(`${tag} Action Assigned:  ${msg.assigned}`, { show: false })
                     this.assigned.push(msg.assigned)
                 }
             }
@@ -112,7 +120,7 @@ class Agent {
         this.reset()
         setInterval(() => {
             // TODO: reset action space by mapping modules
-            log(`${tag} State - ${this.name}: ${this.state.creature}`, {show: false})
+            log(`${tag} State - ${this.name}: ${this.state.creature}`, { show: false })
             this.step()
         }, this.speed)
     }
