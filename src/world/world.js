@@ -55,7 +55,7 @@ class World {
     if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50) // mapping size gene to set skin
     if (!b.state.visual_space) b.state.visual_space = b.state.skin * this.observation_limit
     if (!b.state.nearby) b.state.nearby = []
-    if (!b.state.selection) b.state.selection = {}
+    if (!b.state.action.selection) b.state.action.selection = {}
     return b
   }
 
@@ -220,9 +220,9 @@ class World {
    */
   reproduce(b) {
     let child = false
-    if (b.features.health > 1 && b.state.selection && Object.keys(b.state.selection).length > 0) {
+    if (b.features.health > 1 && b.state.action.selection && Object.keys(b.state.action.selection).length > 0) {
 
-      log(`${tag} Reproducing: ${JSON.stringify(b.state.selection)}`, { show: false })
+      log(`${tag} Reproducing: ${JSON.stringify(b.state.action.selection)}`, { show: false })
       let chosen = this.queue.length - 1 // TODO: choose agent based on different critera?
       let agent = this.selectAgent(chosen)
       let health = randint(1, b.features.health) // TODO: move to divine energy model?
@@ -252,7 +252,7 @@ class World {
           log(`${tag} Reproducing: Parent ${b.features.name} Unable to Spawn Child: `)
         }
       }
-      b.state.selection = null
+      b.state.action.selection = null
       return child
     }
   }
@@ -285,19 +285,36 @@ class World {
       b.spin(full_observation, cost) // performs the action
       b.features.health -= cost
       this.energy += cost // "pay" world the cost of the action
-      if (typeof b.state == 'object') {
-        let transactions = Object.keys(b.state).filter(state => state.transaction && state.transaction === true)
-        transactions.forEach(transaction => {
-          // TODO: resolve transaction between creatures
-          let arbitrary = random(-1, 1)
-          let recipient = this.bloops[chosen.features.name]
-          // if success, then deduct from recipient add to current
-        
-        })
-      }
       send(b.agent, { state: b.state })
     }
     b.reset()
+  }
+
+  transact(b) {
+    if (typeof b.state == 'object' && typeof b.state.transaction === 'object') {
+      let success = randint(-1, 1) // TODO: parameterize
+      // Handle a Take Transaction
+      if (b.state.transaction.take) {
+        let chosen = b.state.transaction.from.features.name
+        b.state.transaction
+        if (success > 0) {
+          // if success, then deduct from recipient add to current
+          this.bloops[chosen].features.health -= b.state.transaction.take
+          b.features.health += b.state.transaction.take
+        }
+          // if failure, do nothing...
+      } else if (b.state.transaction.give) {
+        let chosen = b.state.transaction.from.features.name
+        b.state.transaction
+        if (success > 0) {
+          // if success, then deduct from current add to recipient
+          this.bloops[chosen].features.health += b.state.transaction.take
+          b.features.health -= b.state.transaction.take
+        }
+          // if failure, do nothing...   
+      }
+      send(b.agent, { state: b.state })
+    }
   }
 
   /**
@@ -360,8 +377,8 @@ class World {
         delete this.bloops[bloop_name]
       }
       else {
-        // Handle State
-        if (b.state) {
+        // Handle Stateful Observations
+        if (b.state.observation) {
           let child = this.reproduce(b)
           if (child && this.bloops[child.features.name]) {
             b.features.health -= child.features.health // TODO: move this into reproduce() ?
@@ -370,6 +387,9 @@ class World {
         // Handle Actions
         if (b.action.choice > 0) {
           this.act(b)
+        }
+        if (b.state.transaction) {
+          this.transact(b)
         }
         // Handle Energy Conservation
         if (b.features.health < 0) {

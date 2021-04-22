@@ -23,7 +23,7 @@ class Look extends Module {
     spin(self) {
         // if look -> result is "nearby" creatures (state)
         // TODO: make this a NN that learns "attention".
-        let result = self.observations.filter(observation => {
+        let nearby = self.observations.filter(observation => {
             if (observation.state.position.x <= self.state.visual_space && observation.state.position.y <= self.state.visual_space) {
                 // console.log('Nearby:', observation.name)
                 return true
@@ -31,7 +31,7 @@ class Look extends Module {
         }).map(observation => observation.features) 
 
         // if(result.length > 0) console.log('Saw: ', result)
-        return { nearby: result }
+        return { observation: nearby }
     }
 }
 
@@ -62,7 +62,7 @@ class Move extends Module {
         }
         // if (position !== self.state.position) console.log('Moving: from', self.state.position, ' to', position)
         // else console.log('Same ', position)
-        return { position }
+        return { action: position }
     }
 }
 
@@ -94,7 +94,7 @@ class Select extends Module {
         let select = potentials.find(potential => potential.attraction === selected)
         let selection = select && select.other ? {mate: select.other, payment} : select
         // if(selection) console.log("Selection", selection)
-        return { selection }
+        return { action: selection }
     }
 }
 
@@ -111,8 +111,10 @@ class Eat extends Module {
     spin(self) {
         let chosen = self.action.params[0] // this is the index of the nearby creature
         let others = self.state.nearby
-        if(!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return {eat : false}
-        return {eat: others[chosen], transaction: true }
+        if(!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return {transaction : false}
+        let amount = random(0, others[chosen].features.health)
+        let eat = {take: amount, from: others[chosen]}
+        return {transaction : eat}
     }
 }
 
