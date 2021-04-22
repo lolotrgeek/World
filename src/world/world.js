@@ -294,6 +294,9 @@ class World {
     if (typeof b.state == 'object' && typeof b.state.transaction === 'object') {
       let success = randint(-1, 1) // TODO: parameterize
       // Handle a Take Transaction
+
+      // TODO: does transaction require locality? -> double check nearby, fail if not
+
       if (b.state.transaction.take) {
         let chosen = b.state.transaction.from.features.name
         b.state.transaction
@@ -303,6 +306,8 @@ class World {
           b.features.health += b.state.transaction.take
         }
           // if failure, do nothing...
+
+      // Handle a give Transaction
       } else if (b.state.transaction.give) {
         let chosen = b.state.transaction.from.features.name
         b.state.transaction
