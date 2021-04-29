@@ -48,7 +48,7 @@ class Agent {
             log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`)
             log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}`)
         }
-        if (this.state.creature) {
+        if (this.state.creature && this.state.creature.action_space.length > 0) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }
             this.actions.push(msg)
             log(`${tag} Action Step: ${JSON.stringify(msg)}`, { show: false })
@@ -77,7 +77,12 @@ class Agent {
             // assignment : {creature: object, agent: string}
             else if (msg.creature && this.name === msg.agent) {
                 log(`${tag} Agent ${this.name} is assigned to Creature ${msg.creature.features.name}`, { show: false })
-                this.state.creature = msg.creature
+                if (msg.creature.action_space.length === 0) {
+                    // the creature has no action_space... let it die...
+                    this.state.creature = null
+                } else {
+                    this.state.creature = msg.creature
+                }
             }
             else if (this.state.creature) {
                 if (msg.dying) {
