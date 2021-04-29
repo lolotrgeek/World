@@ -45,8 +45,8 @@ class Agent {
     step() {
         let msg
         if (this.observations.length > 0) {
-            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`)
-            log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}`)
+            log(`${tag} Observation Step: ${JSON.stringify(this.observations)}`, {show: false})
+            log(`${tag} Observation Step: Nearby ${JSON.stringify(this.observations[0].nearby)}` , {show: false})
         }
         if (this.state.creature && this.state.creature.action_space.length > 0) {
             msg = { action: this.sample(), agent: this.name, creature: this.state.creature.features.name }

@@ -22,7 +22,7 @@ class Bloop {
     this.action_space = []
 
     // modules
-    this.slots = 4
+    this.slots = 5
     this.modules = [] // see modulate() in ./src/world/world.js for initial modules
 
     // state
@@ -44,17 +44,15 @@ class Bloop {
     }
     else if (result.transaction) {
       newstate = Object.keys(result.transaction)
-      if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.transaction[key])
+      this.state.transaction = result.transaction
     }
     else if (result.observation) {
       newstate = Object.keys(result.observation)
       if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.observation[key])
     }
-    // if (result !== this.state.position) console.log('Moving: from', this.state.position, ' to', result)
-    // else console.log('Same ', result)
-    console.log('result', result)
     log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}`, { show: false })
     if (this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`)
+    if(this.state.transaction) console.log(this.state.transaction)
   }
 
   reset() {

@@ -64,9 +64,9 @@ class World {
         b.modules.push(module)
       } else {
         log(`${tag} Module cannot attach. No available slots: ${b.modules.length}/${b.slots}`)
+        console.log('Modules', b.modules)
       }
     })
-    console.log('Modules', b.modules)
     return b
   }
 
@@ -300,30 +300,45 @@ class World {
       let success = randint(-1, 1) // TODO: parameterize
       // Handle a Take Transaction
 
-      // TODO: does transaction require locality? -> double check nearby, fail if not
+      // TODO: does transaction require locality? -> double check nearby i.e. observed nearby !== actual nearby
 
       if (b.state.transaction.take) {
-        let chosen = b.state.transaction.from.features.name
-        b.state.transaction
-        if (success > 0) {
-          // if success, then deduct from recipient add to current
-          this.bloops[chosen].features.health -= b.state.transaction.take
-          b.features.health += b.state.transaction.take
-        }
-          // if failure, do nothing...
+        let chosen = b.state.transaction.from.name
 
-      // Handle a give Transaction
+        if (this.bloops[chosen] && this.bloops[chosen].features.health > b.state.transaction.take) {
+          let start = this.bloops[chosen].features.health
+          // deduct from recipient add to current
+          b.features.health += b.state.transaction.take
+          this.bloops[chosen].features.health -= b.state.transaction.take
+          log(`${tag} Transacted Amount: ${b.state.transaction.take}`)
+          log(`${tag} Health (before/after): ${start}/${this.bloops[chosen].features.health}`)
+        }
+        else if (this.bloops[chosen]) {
+          // cannot always get desired amount if it doesn't exist...
+          b.features.health += this.bloops[chosen].features.health
+          this.bloops[chosen].features.health = 0
+          log(`${tag} Transacted Amount: ${this.bloops[chosen].features.health} | Requested Amount: ${b.state.transaction.take}`)
+
+        }
+        else {
+          log(`${tag} Transaction Failed, cannot transact with non existent creature: ${this.bloops[chosen]}`)
+        }
+
+
+        // if failure, do nothing...
+
+        // Handle a give Transaction
       } else if (b.state.transaction.give) {
-        let chosen = b.state.transaction.from.features.name
-        b.state.transaction
+        let chosen = b.state.transaction.from.name
         if (success > 0) {
           // if success, then deduct from current add to recipient
           this.bloops[chosen].features.health += b.state.transaction.take
           b.features.health -= b.state.transaction.take
         }
-          // if failure, do nothing...   
+        // if failure, do nothing...   
       }
       send(b.agent, { state: b.state })
+      b.state.transaction = null
     }
   }
 
@@ -394,12 +409,13 @@ class World {
             b.features.health -= child.features.health // TODO: move this into reproduce() ?
           }
         }
+        if (b.state.transaction) {
+          // console.log('Transacting:', b.state.transaction)
+          this.transact(b)
+        }
         // Handle Actions
         if (b.action.choice > 0) {
           this.act(b)
-        }
-        if (b.state.transaction) {
-          this.transact(b)
         }
         // Handle Energy Conservation
         if (b.features.health < 0) {

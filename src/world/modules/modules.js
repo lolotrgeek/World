@@ -31,7 +31,7 @@ class Look extends Module {
         }).map(observation => observation.features)
 
         // if(result.length > 0) console.log('Saw: ', result)
-        return { observation: nearby }
+        return { observation: {nearby} }
     }
 }
 
@@ -101,7 +101,7 @@ class Select extends Module {
 class Eat extends Module {
     constructor() {
         super()
-        this.params = 2
+        this.params = 1
     }
     /**
      * this is only expressing the desire to eat another, the `world` has to resolve this transaction
@@ -112,9 +112,9 @@ class Eat extends Module {
         let chosen = self.action.params[0] // this is the index of the nearby creature
         let others = self.state.nearby
         if (!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return { transaction: false }
-        let amount = random(0, others[chosen].features.health)
-        let eat = { take: amount, from: others[chosen] }
-        return { transaction: { eat } }
+        let bite = random(0, 5) // TODO: random generated amount to "bite" off
+        let eat = { take: bite, from: others[chosen] }
+        return { transaction: eat }
     }
 }
 
