@@ -1,7 +1,7 @@
 // A Proxy for Reality
 
 const { Bloop } = require('./creatures/bloop')
-const { Module, Look, Move, Select } = require('./modules/actions')
+const { Module, Look, Move, Select } = require('./modules/modules')
 const { DNA } = require('./creatures/dna')
 
 const { listen, broadcast, send } = require('../server')
@@ -55,7 +55,6 @@ class World {
     if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50) // mapping size gene to set skin
     if (!b.state.visual_space) b.state.visual_space = b.state.skin * this.observation_limit
     if (!b.state.nearby) b.state.nearby = []
-    if (!b.state.action.selection) b.state.action.selection = {}
     return b
   }
 
@@ -71,7 +70,7 @@ class World {
 
   spawn(health, dna = new DNA()) {
     // set initial features of creature
-    log(`${tag} Spawning : ${health}`, { show: false })
+    log(`${tag} Spawning : ${health}`, { show: true })
     let bloop = this.manifest(this.modulate(new Bloop(dna, health)))
     bloop.reset()
     bloop.features.generation = this.generation
@@ -220,7 +219,7 @@ class World {
    */
   reproduce(b) {
     let child = false
-    if (b.features.health > 1 && b.state.action.selection && Object.keys(b.state.action.selection).length > 0) {
+    if (b.features.health > 1 && b.state && b.state.action && b.state.action.selection && Object.keys(b.state.action.selection).length > 0) {
 
       log(`${tag} Reproducing: ${JSON.stringify(b.state.action.selection)}`, { show: false })
       let chosen = this.queue.length - 1 // TODO: choose agent based on different critera?
@@ -273,7 +272,7 @@ class World {
    * @param {Object} b.action `{ choice: int, params: [], last_action: int }`  
    */
   act(b) {
-    log(`${tag} Creature ${b.features.name} Action ${b.action.choice}`, { show: false })
+    log(`${tag} Creature ${b.features.name} Action ${b.action.choice} ${this.modules[b.action.choice].constructor.name}`, { show: false })
     let cost = random(0, 1) // TODO: environmental factors for cost, task based
     if (cost > b.features.health) {
       // death blow - cost too high for health so it kills the creature

@@ -7,11 +7,11 @@ const tag = "[Bloop]"
 class Bloop {
   constructor(dna_, health) {
     this.features = {
-      name : null,
-      health : health,
-      dna : dna_,
-      attractions : [Math.random()],
-      phenotype : { r: 0, g: 0, b: 0 }
+      name: null,
+      health: health,
+      dna: dna_,
+      attractions: [Math.random()],
+      phenotype: { r: 0, g: 0, b: 0 }
     }
 
     this.features.phenotype.b = Math.round(this.features.attractions[0] * 100)
@@ -28,7 +28,7 @@ class Bloop {
     // state
     this.observations = []
     this.actions = []
-    this.action = { choice: 0, params: [], last_action: Date.now()}
+    this.action = { choice: 0, params: [], last_action: Date.now() }
     this.state = {} // see manifest() in ./src/world/world.js for initial state
   }
 
@@ -36,13 +36,25 @@ class Bloop {
     this.observations = observations
     let module = this.modules[this.action.choice]
     let result = module.spin(this)
+    let newstate
     // update state : add key/value of result to state object
-    let newstate = Object.keys(result)
+    if (result.action) {
+      newstate = Object.keys(result.action)
+      if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.action[key])
+    }
+    else if (result.transaction) {
+      newstate = Object.keys(result.transaction)
+      if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.transaction[key])
+    }
+    else if (result.observation) {
+      newstate = Object.keys(result.observation)
+      if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.observation[key])
+    }
     // if (result !== this.state.position) console.log('Moving: from', this.state.position, ' to', result)
     // else console.log('Same ', result)
-    if (newstate.length > 0) newstate.forEach(key => this.state[key] = result[key])
-    log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}, health:${this.health}`, {show: false})
-    if(this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`)
+    console.log('result', result)
+    log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}`, { show: false })
+    if (this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`)
   }
 
   reset() {

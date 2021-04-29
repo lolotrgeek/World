@@ -28,7 +28,7 @@ class Look extends Module {
                 // console.log('Nearby:', observation.name)
                 return true
             } else return false
-        }).map(observation => observation.features) 
+        }).map(observation => observation.features)
 
         // if(result.length > 0) console.log('Saw: ', result)
         return { observation: nearby }
@@ -57,12 +57,12 @@ class Move extends Module {
         if (x > 0 || y > 0) {
             let vx = noise(-self.state.maxspeed, self.state.maxspeed)
             let vy = noise(-self.state.maxspeed, self.state.maxspeed)
-            
-            position = {x: self.state.position.x + x + vx, y: self.state.position.y + y + vy}
+
+            position = { x: self.state.position.x + x + vx, y: self.state.position.y + y + vy }
         }
         // if (position !== self.state.position) console.log('Moving: from', self.state.position, ' to', position)
         // else console.log('Same ', position)
-        return { action: position }
+        return { action: { position } }
     }
 }
 
@@ -70,7 +70,7 @@ class Move extends Module {
  * Select - Basic Initial Transaction (output) Module (BATM)
  */
 class Select extends Module {
-    constructor() { 
+    constructor() {
         super()
         this.params = 1
     }
@@ -78,7 +78,7 @@ class Select extends Module {
     spin(self) {
         let payment = self.action.params[0]
         // do not accept 0 or negative payments
-        if(payment <= 0) return {action : false}
+        if (payment <= 0) return { action: false }
         let others = self.state.nearby
         let threshold = 0.01
         // score others by attractiveness
@@ -86,15 +86,15 @@ class Select extends Module {
             // determine attraction
             let attraction = Math.abs(self.features.attractions[0] - other.dna.genes[0])
             // console.log('Attraction', attraction)
-            return {attraction, other}
+            return { attraction, other }
         })
         let attractions = potentials.map(potential => potential.attraction).filter(attraction => attraction > threshold)
         // select the most attractive
         let selected = Array.max(attractions)
         let select = potentials.find(potential => potential.attraction === selected)
-        let selection = select && select.other ? {mate: select.other, payment} : select
+        let selection = select && select.other ? { mate: select.other, payment } : select
         // if(selection) console.log("Selection", selection)
-        return { action: selection }
+        return { action: { selection } }
     }
 }
 
@@ -111,10 +111,10 @@ class Eat extends Module {
     spin(self) {
         let chosen = self.action.params[0] // this is the index of the nearby creature
         let others = self.state.nearby
-        if(!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return {transaction : false}
+        if (!others || others.length <= 0 || typeof chosen !== 'number' || !others[chosen]) return { transaction: false }
         let amount = random(0, others[chosen].features.health)
-        let eat = {take: amount, from: others[chosen]}
-        return {transaction : eat}
+        let eat = { take: amount, from: others[chosen] }
+        return { transaction: { eat } }
     }
 }
 
