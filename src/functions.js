@@ -127,6 +127,7 @@ global.randint = function randint(min, max) {
  * @global `all`, `none`, `file`, `info`, `debug`, `error` , `[...namespace]`
  */
 global.log = function log(msg, {namespace='default', level = 'info', show = true} = {}) {
+  if(show === true) console.log(msg)
   if (LOGGING === 'file') {
     let entry = '\n' + `${level} - ${new Date().toLocaleString()} - ${msg}`
     fs.appendFile('./logs/log.txt', entry, (err) => {
