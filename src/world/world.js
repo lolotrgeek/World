@@ -1,7 +1,7 @@
 // A Proxy for Reality
 
 const { Bloop } = require('./creatures/bloop')
-const { Module, Look, Move, Select } = require('./modules/modules')
+const { Module, Look, Move, Select, Eat } = require('./modules/modules')
 const { DNA } = require('./creatures/dna')
 
 const { listen, broadcast, send } = require('../server')
@@ -31,7 +31,7 @@ class World {
     this.bloops = {}
     this.initial_population = 7
     this.generation = 0 // only tracks generation of creatures spawned by world
-    this.modules = [new Module(), new Select, new Look(), new Move()]
+    this.modules = [new Module(), new Select, new Look(), new Move(), new Eat()]
     this.mutation = .02
     this.observation_limit = 5
   }
@@ -59,12 +59,14 @@ class World {
   }
 
   modulate(b) {
-    // attach modules to the creature
-    if (this.modules.length <= b.slots) {
-      b.modules = this.modules
-      b.slots -= this.modules.length
-    }
-    //TODO: handle trying to attach too many modules
+    this.modules.forEach(module => {
+      if (b.modules.length < b.slots) {
+        b.modules.push(module)
+      } else {
+        log(`${tag} Module cannot attach. No available slots: ${b.modules.length}/${b.slots}`)
+      }
+    })
+    console.log('Modules', b.modules)
     return b
   }
 
@@ -219,7 +221,7 @@ class World {
    */
   reproduce(b) {
     let child = false
-    if (b.features.health > 1 && b.state && b.state.action && b.state.action.selection && Object.keys(b.state.action.selection).length > 0) {
+    if (b.features.health > 1 && b.state && b.state.selection && Object.keys(b.state.selection).length > 0) {
 
       log(`${tag} Reproducing: ${JSON.stringify(b.state.action.selection)}`, { show: false })
       let chosen = this.queue.length - 1 // TODO: choose agent based on different critera?
@@ -289,6 +291,10 @@ class World {
     b.reset()
   }
 
+  /**
+   * Move energy from one creature to another
+   * @param {*} b creature 
+   */
   transact(b) {
     if (typeof b.state == 'object' && typeof b.state.transaction === 'object') {
       let success = randint(-1, 1) // TODO: parameterize
@@ -419,8 +425,10 @@ class World {
     }
   }
 
-  // Handle Actions messages
-  // action message { action: {choice: int, params: []}, agent: string, creature: number }
+  /**
+   * action message { action: {choice: int, params: []}, agent: string, creature: number }
+   * @param {*} obj - parsed incoming message
+   */
   handleAction(obj) {
     let action = obj.action
     let creature = null
