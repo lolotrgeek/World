@@ -13,6 +13,7 @@ class World {
     this.speed = 100
     this.size = size
     this.odds = odds
+    this.steps = 0
     this.worlds = [] // list of connected "world" clients
 
     // Energy Params
@@ -274,7 +275,7 @@ class World {
    * @param {Object} b.action `{ choice: int, params: [], last_action: int }`  
    */
   act(b) {
-    log(`${tag} Creature ${b.features.name} Action ${b.action.choice} ${this.modules[b.action.choice].constructor.name}`, { show: false })
+    log(`${tag}Step: ${this.steps} Creature ${b.features.name} Action ${b.action.choice} ${this.modules[b.action.choice].constructor.name}`, { show: true })
     let cost = random(0, 1) // TODO: environmental factors for cost, task based
     if (cost > b.features.health) {
       // death blow - cost too high for health so it kills the creature
@@ -310,8 +311,8 @@ class World {
           // deduct from recipient add to current
           b.features.health += b.state.transaction.take
           this.bloops[chosen].features.health -= b.state.transaction.take
-          log(`${tag} Transacted Amount: ${b.state.transaction.take}`)
-          log(`${tag} Health (before/after): ${start}/${this.bloops[chosen].features.health}`)
+          log(`${tag} Steps: ${this.steps} Creature ${b.features.name} Transacted Amount: ${b.state.transaction.take}`)
+          log(`${tag} Health (before/after): ${start}/${this.bloops[chosen].features.health}`, {show: false })
         }
         else if (this.bloops[chosen]) {
           let start = this.bloops[chosen].features.health
@@ -324,7 +325,6 @@ class World {
         else {
           log(`${tag} Transaction Failed, cannot transact with non existent creature: ${this.bloops[chosen]}`)
         }
-
 
         // if failure, do nothing...
 
@@ -425,6 +425,7 @@ class World {
       }
     }
     this.checkEnergy()
+    this.steps++
   }
 
   handleAgent(obj) {
