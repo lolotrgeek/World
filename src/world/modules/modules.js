@@ -1,5 +1,5 @@
 
-// Action Modules
+// Modules
 // every action has an energy cost, 
 // the cost will change depending on the environment 
 // i.e. movemvent in a high friction envrionment costs more energy
@@ -13,16 +13,15 @@ class Module {
 }
 
 /**
- * Look - Basic Initial Observation (input) Module (BIOM) 
+ * Get nearby creatures.
+ * @type observation
  */
 class Look extends Module {
-    // look for nearby creatures
     constructor() {
         super()
     }
     spin(self) {
-        // if look -> result is "nearby" creatures (state)
-        // TODO: make this a NN that learns "attention".
+        // TODO: add param that sets how much of available state space to observe (foundation for attention)
         let nearby = self.observations.filter(observation => {
             if (observation.state.position.x <= self.state.visual_space && observation.state.position.y <= self.state.visual_space) {
                 // console.log('Nearby:', observation.name)
@@ -36,7 +35,8 @@ class Look extends Module {
 }
 
 /**
- * Move - Basic Initial Action (output) Module (BIAM)
+ * Change position.
+ * @type action
  */
 class Move extends Module {
     constructor() {
@@ -45,8 +45,6 @@ class Move extends Module {
         // params are an array of integers, here this.params lets the agent know the length of that array
     }
     spin(self) {
-        // TODO: consider passing only needed vars, not entire self...
-        // if move -> result is the new position (state) -> result updates position
         let position = self.state.position
 
         let x = self.action.params[0]
@@ -67,7 +65,8 @@ class Move extends Module {
 }
 
 /**
- * Select - Basic Initial Transaction (output) Module (BATM)
+ * Express desire to reproduce.
+ * @type transaction
  */
 class Select extends Module {
     constructor() {
@@ -98,16 +97,16 @@ class Select extends Module {
     }
 }
 
+/**
+ * Express desire to take energy.
+ * @type transaction
+ */
 class Eat extends Module {
     constructor() {
         super()
         this.params = 1
     }
-    /**
-     * this is only expressing the desire to eat another, the `world` has to resolve this transaction
-     * @param {*} self 
-     * @returns 
-     */
+
     spin(self) {
         let chosen = self.action.params[0] // this is the index of the nearby creature
         let others = self.state.nearby
@@ -115,17 +114,6 @@ class Eat extends Module {
         let bite = random(0, 5) // TODO: random generated amount to "bite" off
         let eat = { take: bite, from: others[chosen] }
         return { transaction: eat }
-    }
-}
-
-/**
- * Generates an Observation via a feedback mechanism using past observations (world model)
- */
-class Simulate extends Module {
-    constructor() {
-        super()
-    }
-    spin(self) {
     }
 }
 

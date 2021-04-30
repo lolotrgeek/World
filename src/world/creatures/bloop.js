@@ -32,10 +32,11 @@ class Bloop {
     this.state = {} // see manifest() in ./src/world/world.js for initial state
   }
 
-  spin(observations, cost) {
-    this.observations = observations
-    let module = this.modules[this.action.choice]
-    let result = module.spin(this)
+  /**
+   * Update the state of this bloop
+   * @param {object} result outcome of spun module(s)
+   */
+  update(result) {
     let newstate
     // update state : add key/value of result to state object
     if (result.action) {
@@ -50,9 +51,15 @@ class Bloop {
       newstate = Object.keys(result.observation)
       if (newstate.length > 0) newstate.forEach(key => this.state[key] = result.observation[key])
     }
+  }
+
+  spin(observations, cost) {
+    this.observations = observations
+    let module = this.modules[this.action.choice]
+    let result = module.spin(this)
+    this.update(result)
     log(`${tag} ${this.features.name} - action: [${module.constructor.name}, ${JSON.stringify(this.action)}], cost:${cost}`, { show: false })
     if (this.actions.length === 0) log(`${tag} ${this.features.name} - ${this.agent}`)
-    if(this.state.transaction) console.log(this.state.transaction)
   }
 
   reset() {
