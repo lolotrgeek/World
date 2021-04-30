@@ -33,7 +33,7 @@ class World {
     this.generation = 0 // only tracks generation of creatures spawned by world
     this.modules = [new Module(), new Select, new Look(), new Move(), new Eat()]
     this.mutation = .02
-    this.observation_limit = 5
+    
   }
 
   addAgent(agent) {
@@ -53,7 +53,7 @@ class World {
     if (!b.state.position) b.state.position = { x: random(this.size.x), y: random(this.size.y) }
     if (!b.state.maxspeed) b.state.maxspeed = Math.map(b.features.dna.genes[0], 0, 1, 15, 0) // mapping size gene to set max speed
     if (!b.state.skin) b.state.skin = Math.map(b.features.dna.genes[0], 0, 1, 0, 50) // mapping size gene to set skin
-    if (!b.state.visual_space) b.state.visual_space = b.state.skin * this.observation_limit
+    if (!b.state.visual_space) b.state.visual_space = b.state.skin * Math.round(b.features.dna.genes[0] * 100)
     if (!b.state.nearby) b.state.nearby = []
     return b
   }
@@ -314,10 +314,11 @@ class World {
           log(`${tag} Health (before/after): ${start}/${this.bloops[chosen].features.health}`)
         }
         else if (this.bloops[chosen]) {
+          let start = this.bloops[chosen].features.health
           // cannot always get desired amount if it doesn't exist...
           b.features.health += this.bloops[chosen].features.health
           this.bloops[chosen].features.health = 0
-          log(`${tag} Transacted Amount: ${this.bloops[chosen].features.health} | Requested Amount: ${b.state.transaction.take}`)
+          log(`${tag} Transacted Amount: ${start} | Requested Amount: ${b.state.transaction.take}`)
 
         }
         else {
