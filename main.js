@@ -1,7 +1,7 @@
 require('./src/functions')
 
 const { World } = require('./src/world/world')
-const { run } = require('./server')
+const { run } = require('./src/utils/server')
 LOGGING = 'debug'
 
 
