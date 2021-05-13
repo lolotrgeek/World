@@ -1,6 +1,7 @@
 # World - scalable multi-agent environment
+This version of the world has spirited agents that interact with pre-defined creatures in an environment.
 
-## System
-- World.js - evolutionary environment
-- Bloop.js - creature environment
-- Agent.js - learning environment
+Creatures die if they do not have agency.
+Creatures have the ability to reproduce.
+Cretures are comprised of modules/energy.
+
