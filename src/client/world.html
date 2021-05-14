@@ -22,12 +22,8 @@
             /* This centers our sketch vertically. */
             align-items: left;
         }
-
-        #stats {
-            width: 70%
-        }
         #sketch {
-            width: 30%
+            width: 100%
         }
 
         .grid {
@@ -43,47 +39,11 @@
         .grid>div>span{
             overflow-wrap: break-word;
         }
-        #world{
-            height: 10vh;
-        }
-        #running{
-            height: 20vh;
-            overflow: scroll;
-        }
-        #queue{
-            height: 20vh;
-            overflow: scroll;
-        }
-        #creautures {
-            height:20vh;
-        }
     </style>
 </head>
 
 <body>
     <div id="sketch" ></div>
-    <div id="stats">
-        <div id="world">
-            <div id="world-stats"></div>
-        </div>
-        <div id="agents" >
-            <div id="running">
-                <h3>Online: </h3>
-                <div id="online-column-headers" class="grid"></div>
-                <div id="online" class="grid"></div>
-            </div>
-            <div id="queue">
-                <h3>Queue: </h3>
-                <div id="waiting-column-headers" class="grid"></div>
-                <div id="waiting" class="grid"></div>
-            </div>
-
-        </div>
-        <div id="creatures" >
-            <div id="creature-column-headers" class="grid"></div>
-            <div id="creature" class="grid"></div>
-        </div>
-    </div>
 
     <script src="reconnecting-websocket.js"></script>
     <script src="sockets.js"></script>

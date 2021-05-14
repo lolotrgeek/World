@@ -1,13 +1,7 @@
-// The Nature of Code
-// Daniel Shiffman
-// http://natureofcode.com
-
-// Evolution EcoSystem
 
 class World {
-  constructor(bloops=[], energy=0) {
-    this.food = energy
-    this.bloops = bloops
+  constructor(particles=[]) {
+    this.particles = particles
     this.size = {x: 500, y: 500} // TODO: send through ports to visualize network space?
     this.p = null
   }
@@ -28,49 +22,49 @@ class World {
   }
 
   wraparound(position, r) {
-    // cause bloops to wrap around the envrironment
+    // cause particles to wrap around the envrironment
     if (position.x < -r) position.x = this.p.width + r
     if (position.y < -r) position.y = this.p.height + r
     if (position.x > this.p.width + r) position.x = -r
     if (position.y > this.p.height + r) position.y = -r
   }
 
-  display(bloop) {
+  display(particle) {
     this.p.ellipseMode(this.p.CENTER)
-    this.p.stroke(0, bloop.features.health)
-    let color = bloop.features.phenotype
-    this.p.fill(color.r, color.g, color.b, bloop.features.health)
-    this.p.ellipse(bloop.state.position.x, bloop.state.position.y, bloop.state.skin, bloop.state.skin)
+    this.p.stroke(0, particle.features.health)
+    let color = particle.features.phenotype
+    this.p.fill(color.r, color.g, color.b, particle.features.health)
+    this.p.ellipse(particle.position.x, particle.position.y, particle.skin, particle.skin)
   }
 
-  nearby(bloop) {
-    let bloops = this.bloops.forEach(other => {
-      // let distance = p5.Vector.dist(bloop.state.position, other.state.position)
-      let distance = this.p.int(this.p.dist(bloop.state.position.x, other.state.position.x, bloop.state.position.y, other.state.position.y))
-      if (distance > bloop.state.skin && distance < bloop.state.visual_space) {
-        this.showdistance(bloop.state.position, other.state.position, bloop.features.attractions[0] - other.features.attractions[0])
+  nearby(particle) {
+    let particles = this.particles.forEach(other => {
+      // let distance = p5.Vector.dist(particle.position, other.position)
+      let distance = this.p.int(this.p.dist(particle.position.x, other.position.x, particle.position.y, other.position.y))
+      if (distance > particle.skin && distance < particle.visual_space) {
+        this.showdistance(particle.position, other.position, particle.features.attractions[0] - other.features.attractions[0])
       }
       else return false
     })
-    return { bloops }
+    return { particles }
   }
 
-  inside(bloop, thingLocation) {
-    let distance = p5.Vector.dist(bloop.state.position, thingLocation)
-    if (distance < bloop.state.skin) return true
+  inside(particle, thingLocation) {
+    let distance = p5.Vector.dist(particle.position, thingLocation)
+    if (distance < particle.skin) return true
     else return false
   }
 
-  position(b) {
-    return this.p.createVector(b.state.position.x, b.state.position.y)
+  position(particle) {
+    return this.p.createVector(particle.position.x, particle.position.y)
   }
 
   spin() {
-    this.bloops.forEach(bloop => {
-      bloop.state.position = this.position(bloop)
-      this.wraparound(bloop.state.position, bloop.state.skin)
-      this.display(bloop)
-      this.nearby(bloop)
+    this.particles.forEach(particle => {
+      particle.position = this.position(particle)
+      this.wraparound(particle.position, particle.skin)
+      this.display(particle)
+      this.nearby(particle)
     })
   }
 }
