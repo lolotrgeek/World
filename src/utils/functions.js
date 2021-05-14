@@ -45,6 +45,11 @@ Array.prototype.remove = function () {
   return this
 }
 
+/**
+ * Choose a random element from an array.
+ * @param {*} array 
+ * @returns 
+ */
 Array.choice = function (array) {
   return array[Math.floor(Math.random() * array.length)]
 }
@@ -126,14 +131,14 @@ global.randint = function randint(min, max) {
  * @global`LOGGING` : required global variable that sets logging scope 
  * @global `all`, `none`, `file`, `info`, `debug`, `error` , `[...namespace]`
  */
-global.log = function log(msg, {namespace='default', level = 'info', show = true} = {}) {
-  if(show === true) console.log(msg)
+global.log = function log(msg, { namespace = 'default', level = 'info', show = true } = {}) {
+  if (show === true) console.log(msg)
   if (LOGGING === 'file') {
     let entry = '\n' + `${level} - ${new Date().toLocaleString()} - ${msg}`
     fs.appendFile('./logs/log.txt', entry, (err) => {
       if (err) console.log(err)
     })
-  } 
+  }
   else if (LOGGING === 'info' && level === 'info' && show === true) console.log(msg)
   else if (LOGGING === 'debug' && level === 'debug' && show === true) console.debug(msg)
   else if (LOGGING === 'error' && level === 'error' && show === true) console.error(msg)
@@ -257,4 +262,57 @@ global.noise = function noise(x, y = 0, z = 0) {
     }
   }
   return r;
+};
+
+/**
+ * @constructor
+ * @param {Number} [x] x component of the vector
+ * @param {Number} [y] y component of the vector
+ * @param {Number} [z] z component of the vector
+ * @example
+ * <div>
+ * <code>
+ * let v1 = createVector(40, 50);
+ * let v2 = createVector(40, 50);
+ *
+ * ellipse(v1.x, v1.y, 50, 50);
+ * ellipse(v2.x, v2.y, 50, 50);
+ * v1.add(v2);
+ * ellipse(v1.x, v1.y, 50, 50);
+ * </code>
+ * </div>
+ *
+ * @alt
+ * 2 white ellipses. One center-left the other bottom right and off canvas
+ */
+global.Vector = function Vector() {
+  let x, y, z;
+  // This is how it comes in with createVector()
+  if (arguments[0] instanceof p5) {
+    // save reference to p5 if passed in
+    this.p5 = arguments[0];
+    x = arguments[1][0] || 0;
+    y = arguments[1][1] || 0;
+    z = arguments[1][2] || 0;
+    // This is what we'll get with new p5.Vector()
+  } else {
+    x = arguments[0] || 0;
+    y = arguments[1] || 0;
+    z = arguments[2] || 0;
+  }
+  /**
+   * The x component of the vector
+   * @property x {Number}
+   */
+  this.x = x;
+  /**
+   * The y component of the vector
+   * @property y {Number}
+   */
+  this.y = y;
+  /**
+   * The z component of the vector
+   * @property z {Number}
+   */
+  this.z = z;
 };
