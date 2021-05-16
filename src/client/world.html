@@ -11,7 +11,9 @@
         body {
             height: 100%;
         }
-
+        #sketch {
+            width: 70%
+        }
         body {
             margin: 0;
             display: flex;
@@ -22,9 +24,7 @@
             /* This centers our sketch vertically. */
             align-items: left;
         }
-        #sketch {
-            width: 100%
-        }
+
 
         .grid {
             display: grid;
@@ -44,6 +44,7 @@
 
 <body>
     <div id="sketch" ></div>
+    <div id="count"></div>
 
     <script src="reconnecting-websocket.js"></script>
     <script src="sockets.js"></script>

@@ -12,6 +12,7 @@ class World {
     this.particles = []
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
+    this.count = 0
   }
 
   populate() {
@@ -69,6 +70,7 @@ class World {
     setInterval(() => {
       this.step()
       if (this.worlds.length > 0) send("WORLD", JSON.stringify({ world: this }))
+      this.count++
     }, this.speed)
   }
 }

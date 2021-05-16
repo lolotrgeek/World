@@ -1,4 +1,5 @@
 let world_div = document.getElementById("world")
+let count_div = document.getElementById("count")
 
 let world
 
@@ -39,7 +40,9 @@ function subheading(value) {
 }
 
 
+
 listen(msg => {
+    clear(count_div)
     if (typeof msg === 'object') {
         if (typeof msg.start === 'object') {
             world = createworld(msg.start) // from sketch.js
@@ -52,12 +55,12 @@ listen(msg => {
             if (particles) {
                 // update
                 world.particles = particles
+            }
+            if(msg.world.count) {
+                count_div.appendChild(block(text(`step: ${msg.world.count}`)))
             }         
         }
-        else if (msg.action) {
-            // Agent Actions
-        }
-        total_energy = []
+        
     }
     else if (msg === "CLOSED") {
         stopsketch(world) // from sketch.js
