@@ -27,6 +27,14 @@ class World {
     return Math.hypot(a, b)
   }
 
+  wraparound(position, r) {
+    // cause particles to wrap around the envrironment
+    if (position.x < -r) position.x = this.size.x + r
+    if (position.y < -r) position.y = this.size.y + r
+    if (position.x > this.size.x + r) position.x = -r
+    if (position.y > this.size.y + r) position.y = -r
+  }
+
   step() {
     this.particles.forEach((particle, i) => {
       let neighbors = []
@@ -40,6 +48,7 @@ class World {
       })
       particle.neighbors = neighbors
       particle.spin()
+      this.wraparound(particle.position, particle.size)
     })
   }
 

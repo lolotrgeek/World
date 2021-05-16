@@ -21,14 +21,6 @@ class World {
     this.p.pop()
   }
 
-  wraparound(position, r) {
-    // cause particles to wrap around the envrironment
-    if (position.x < -r) position.x = this.p.width + r
-    if (position.y < -r) position.y = this.p.height + r
-    if (position.x > this.p.width + r) position.x = -r
-    if (position.y > this.p.height + r) position.y = -r
-  }
-
   display(particle) {
     this.p.ellipseMode(this.p.CENTER)
     let color
@@ -61,7 +53,6 @@ class World {
   spin() {
     this.particles.forEach(particle => {
       particle.position = this.position(particle)
-      this.wraparound(particle.position, particle.size)
       this.display(particle)
       // this.nearby(particle)
     })
