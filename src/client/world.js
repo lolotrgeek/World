@@ -1,8 +1,8 @@
 
 class World {
-  constructor(particles=[]) {
+  constructor(particles = [], size={ x: 500, y: 500 }) {
     this.particles = particles
-    this.size = {x: 500, y: 500} // TODO: send through ports to visualize network space?
+    this.size = size
     this.p = null
   }
 
@@ -14,7 +14,7 @@ class World {
     this.p.translate((position.x + objective.x) / 2, (position.y + objective.y) / 2)
     this.p.rotate(this.p.atan2(objective.y - position.y, objective.x - position.x))
 
-    if (attractions > 0) {
+    if (attractions) {
       this.p.fill('#fff')
       this.p.text(this.p.nfc(attractions, 1), 0, -5)
     }
@@ -31,27 +31,26 @@ class World {
 
   display(particle) {
     this.p.ellipseMode(this.p.CENTER)
-    this.p.stroke(0, particle.features.health)
-    let color = particle.features.phenotype
-    this.p.fill(color.r, color.g, color.b, particle.features.health)
-    this.p.ellipse(particle.position.x, particle.position.y, particle.skin, particle.skin)
+    let color
+    if (particle.charge === -1) color = "#0004FF"
+    else if (particle.charge === 0) color = "#000"
+    else if (particle.charge === 1) color = "#FF0000"
+    this.p.stroke(color)
+    this.p.fill(color)
+    this.p.ellipse(particle.position.x, particle.position.y, particle.size, particle.size)
   }
 
   nearby(particle) {
-    let particles = this.particles.forEach(other => {
-      // let distance = p5.Vector.dist(particle.position, other.position)
-      let distance = this.p.int(this.p.dist(particle.position.x, other.position.x, particle.position.y, other.position.y))
-      if (distance > particle.skin && distance < particle.visual_space) {
-        this.showdistance(particle.position, other.position, particle.features.attractions[0] - other.features.attractions[0])
-      }
-      else return false
-    })
-    return { particles }
+    if (particle.neighbors.length > 0) {
+      particle.neighbors.forEach(neighbor => {
+        this.showdistance(particle.position, neighbor.position, neighbor.attraction)
+      })
+    }
   }
 
   inside(particle, thingLocation) {
     let distance = p5.Vector.dist(particle.position, thingLocation)
-    if (distance < particle.skin) return true
+    if (distance < particle.size) return true
     else return false
   }
 
@@ -62,9 +61,9 @@ class World {
   spin() {
     this.particles.forEach(particle => {
       particle.position = this.position(particle)
-      this.wraparound(particle.position, particle.skin)
+      this.wraparound(particle.position, particle.size)
       this.display(particle)
-      this.nearby(particle)
+      // this.nearby(particle)
     })
   }
 }

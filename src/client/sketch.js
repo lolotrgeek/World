@@ -1,6 +1,6 @@
 
 function createworld(msg) {
-    let world = new World(msg.particles)
+    let world = new World(msg.particles, msg.size)
     return world
 }
 
@@ -9,8 +9,8 @@ function startsketch(world) {
     world.p = p
     p.setup = function () {
       let div = document.getElementById("sketch")
-      // cnv = p.createCanvas(world.size.x, world.size.y)
-      cnv = p.createCanvas(div.offsetWidth, div.offsetHeight)
+      cnv = p.createCanvas(world.size.x, world.size.y)
+      // cnv = p.createCanvas(div.offsetWidth, div.offsetHeight)
       cnv.style('display', 'block')
       cnv.parent("sketch")
       // noLoop()

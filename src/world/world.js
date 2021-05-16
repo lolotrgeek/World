@@ -6,16 +6,16 @@ const { Particle } = require('./particle')
 const tag = "[World]"
 
 class World {
-  constructor(size = { x: 1000, y: 1000 }, energy = 4, particles = []) {
+  constructor(size = { x: 1000, y: 1000 }, energy = 4) {
     this.size = size // size (dimensions) of world
     this.energy = energy // number of particles
-    this.particles = particles
+    this.particles = []
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
   }
 
   populate() {
-    if(this.particles.length < this.energy) {
+    while (this.particles.length < this.energy) {
       let particle = new Particle()
       this.particles.push(particle)
     }
@@ -28,15 +28,15 @@ class World {
   }
 
   step() {
-    this.populate()
     this.particles.forEach((particle, i) => {
       let neighbors = []
-      let others = this.particles
+      let others = this.particles.map(particle => particle)
       others.splice(i, 1)
       others.forEach((other, i) => {
-        let distance = findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
+        let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
         other.distance = distance
-        if (distance <= particle.aura) neighbors.push(other)
+        let neighbor = {distance: other.distance, position: other.position, charge: other.charge}
+        if (distance <= particle.aura) neighbors.push(neighbor)
       })
       particle.neighbors = neighbors
       particle.spin()
@@ -45,6 +45,7 @@ class World {
 
 
   reset() {
+    this.populate()
     listen(msg => {
       // listen for world renderers
       if (msg === "WORLD") {

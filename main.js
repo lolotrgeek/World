@@ -5,9 +5,9 @@ const { run } = require('./src/utils/server')
 LOGGING = 'debug'
 
 
-let energy = 4
+let energy = 1000
 let size = { x: 500, y: 500 }
-let world = new World(energy, size)
+let world = new World(size, energy)
 
 run()
 // log(world.ports)

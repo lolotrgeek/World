@@ -41,7 +41,6 @@ function subheading(value) {
 
 listen(msg => {
     if (typeof msg === 'object') {
-
         if (typeof msg.start === 'object') {
             world = createworld(msg.start) // from sketch.js
             startsketch(world)
@@ -50,8 +49,8 @@ listen(msg => {
         if (typeof msg.world === 'object') {
             let particles = typeof msg.world.particles === 'object' ? Object.values(msg.world.particles) : null
 
-            if (particles) {                
-                // update creatures
+            if (particles) {
+                // update
                 world.particles = particles
             }         
         }

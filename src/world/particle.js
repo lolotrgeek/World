@@ -5,9 +5,9 @@ class Particle {
     constructor() {
         this.charge = Array.choice([-1, 0, 1]) // randomly assign polarity -1 negative, 0 neutral, 1 positive
         // TODO: add polarized particles? (both positive and negative) 
-        this.position = { x: 0, y: 0 }
-        this.size = 1 // radius of the particle
-        this.aura = 5 // radius of the particle's charge
+        this.position = { x: randint(-500, 500), y: randint(-500, 500) }
+        this.size = 5 // radius of the particle
+        this.aura = 50 // radius of the particle's charge
         this.neighbors = []
     }
 
@@ -24,9 +24,10 @@ class Particle {
     getAttractions() {
         this.neighbors.forEach((neighbor, i) => {
             if (this.isAttracted(neighbor.charge)) {
-                neighbors[i].attraction = neighbor.distance
+                this.neighbors[i].attraction = neighbor.distance
             } else {
-                neighbors[i].attraction = neighbor.distance * -1
+                //NOTE: neutral particles are pushed away from both positive and negative particles...
+                this.neighbors[i].attraction = neighbor.distance * -1
             }
         })
     }
