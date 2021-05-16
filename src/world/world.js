@@ -1,16 +1,24 @@
 // The "Mind-Head"
 
-require('./utils/functions')
-const { listen, broadcast, send } = require('../server')
+require('../utils/functions')
+const { listen, broadcast, send } = require('../utils/router')
+const { Particle } = require('./particle')
 const tag = "[World]"
 
 class World {
-  constructor(size = { x: 1000, y: 1000 }, energy = 100, particles = []) {
+  constructor(size = { x: 1000, y: 1000 }, energy = 4, particles = []) {
     this.size = size // size (dimensions) of world
     this.energy = energy // number of particles
     this.particles = particles
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
+  }
+
+  populate() {
+    if(this.particles.length < this.energy) {
+      let particle = new Particle()
+      this.particles.push(particle)
+    }
   }
 
   findDistance(x1, y1, x2, y2) {
@@ -20,6 +28,7 @@ class World {
   }
 
   step() {
+    this.populate()
     this.particles.forEach((particle, i) => {
       let neighbors = []
       let others = this.particles
@@ -30,6 +39,7 @@ class World {
         if (distance <= particle.aura) neighbors.push(other)
       })
       particle.neighbors = neighbors
+      particle.spin()
     })
   }
 
@@ -38,7 +48,7 @@ class World {
     listen(msg => {
       // listen for world renderers
       if (msg === "WORLD") {
-        this.worlds.push(world)
+        this.worlds.push("WORLD_"+this.worlds.length)
         send("WORLD", JSON.stringify({ start: this }))
       }
     })

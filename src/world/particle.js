@@ -1,6 +1,6 @@
 // The manifestation of Energy
 // Locality and Physicality
-require('./utils/functions')
+require('../utils/functions')
 class Particle {
     constructor() {
         this.charge = Array.choice([-1, 0, 1]) // randomly assign polarity -1 negative, 0 neutral, 1 positive
@@ -21,53 +21,43 @@ class Particle {
         else return false
     }
 
-    spin() {
-        let attractions = []
-        this.neighbors.forEach(neighbor => {
+    getAttractions() {
+        this.neighbors.forEach((neighbor, i) => {
             if (this.isAttracted(neighbor.charge)) {
-                attractions.push(neighbor)
+                neighbors[i].attraction = neighbor.distance
+            } else {
+                neighbors[i].attraction = neighbor.distance * -1
             }
         })
-        let top = [] // list of indices that point to top attractions
-        let max = 0
-        attractions.forEach((attraction, i) => {
-            let current = attractions[i].distance
-            if (current > max) {
-                // set new max
-                max = current
-                // put attraction index in top
-                top.push(i)
-                // remove any top index values that point to attractions less than max
-                top.forEach((value, index) => {
-                    if (attractions[value].distance < max) {
-                        top.slice(index)
-                    }
-                })
+    }
+
+    moveTowards(other, velocity) {
+        let dX = other.position.x - this.position.x
+        let dY = other.position.y - this.position.y
+
+        this.position.x += (dX / velocity)
+        this.position.y += (dY / velocity)
+    }
+
+    moveAwayFrom(other, velocity) {
+        let dX = other.position.x - this.position.x
+        let dY = other.position.y - this.position.y
+
+        this.position.x -= (dX / velocity)
+        this.position.y -= (dY / velocity)
+    }
+
+    spin() {
+        this.getAttractions()
+        this.neighbors.forEach((neighbor, i) => {
+            if (neighbor.attraction < 0) {
+                this.moveAwayFrom(neighbor, neighbor.distance)
             }
-            else if (current === max) {
-                // put another attraction index in top
-                top.push(i)
+            if (neighbor.attraction > 0) {
+                this.moveTowards(neighbor, neighbor.distance)
             }
         })
-        if(top.length === 1) {
-            let attraction = attractions[top[0]] 
-            // if there is a single top attraction, move towards it
-            if (attraction.distance > this.position) {
-
-                let dX = attraction.position.x - this.position.x
-                let dY = attraction.position.y - this.position.y
-    
-                this.position.x += (dX / 10)
-                this.position.y += (dY / 10)
-    
-            }            
-        } else if (top.length > 1) {
-            top.forEach(index => {
-                // TODO: if there are multiple top attractions find and move to a space between them.
-                
-            })
-        }
-
-
     }
 }
+
+module.exports = { Particle }
