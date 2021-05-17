@@ -2,7 +2,7 @@
 
 require('../utils/functions')
 const { listen, send } = require('../utils/router')
-const { Particle } = require('./particle')
+const { Particle, InputParticle, OutputParticle } = require('./particle')
 const tag = "[World]"
 
 class World {
@@ -16,23 +16,25 @@ class World {
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
     this.count = 0
-    this.input = {x: this.size.x / 2, y: this.size.y/2} // middle
-    this.output = {x: this.size.x / 2, y: 0} // bottom
+    this.input = { x: this.size.x / 2, y: this.size.y / 2, charge: 1 } // middle
+    this.output = { x: this.size.x / 2, y: 0, charge: -1 } // bottom
   }
 
   populate() {
+    this.particles.push(new InputParticle(this.input.charge, { x: this.input.x, y: this.input.y }))
+    this.particles.push(new OutputParticle(this.output.charge, { x: this.output.x, y: this.output.y }))
     while (this.particles.length < this.energy) {
       let particle
       let position = { x: randint(-this.size.x, this.size.x), y: randint(-this.size.y, this.size.y) }
-      if(this.positive > 0) {
+      if (this.positive > 0) {
         particle = new Particle(1, position)
         this.positive--
       }
-      else if(this.negative > 0) {
+      else if (this.negative > 0) {
         particle = new Particle(-1, position)
         this.negative--
       }
-      else if(this.neutral > 0) {
+      else if (this.neutral > 0) {
         particle = new Particle(0, position)
         this.neutral--
       }
@@ -55,50 +57,37 @@ class World {
   }
 
   constrain(position, r) {
-    // cause particles to wrap around the envrironment
+    // cause particles to stay within bounds of the envrironment
     if (position.x < 0) position.x = 0
     if (position.y < 0) position.y = 0
     if (position.x > this.size.x) position.x = this.size.x
     if (position.y > this.size.y) position.y = this.size.y
   }
 
-  inputParticle() {
-    // console.log("Particle added!")
-    let particle = new Particle(Array.choice([-1, 0, 1]), {x: this.input.x + 10, y: this.input.y + 10})
-    this.particles.push(particle)
-  }
-
-  outputParticle(particle, index) {
-    let distance = this.findDistance(this.output.x, this.output.y, particle.position.x, particle.position.y)
-    if(distance <= particle.aura) {
-      // TODO: has a charge that attracts, is set externally in order to build agency
-      this.particles.splice(index,1)
-    }
-  }
-
-  testInput(){
-    let trial = randint(-10,2)
-    if(trial > 0) this.inputParticle()
-  }
-
   step() {
-    this.testInput()
-    this.particles.forEach((particle, i) => {
-      this.outputParticle(particle, i)
+    this.particles.forEach((particle, self) => {
+      if (particle.constructor.name === "InputParticle") {
+        let trial = randint(-10, 2)
+        if (trial > 0) {
+          let incoming_particle = new Particle(Array.choice([-1, 0, 1]), {x: this.input.x + 10, y: this.input.y + 10})
+          this.particles.push(incoming_particle)
+        }
+      }
       let neighbors = []
       let others = this.particles.map(particle => particle)
-      others.splice(i, 1)
-      others.forEach((other, i) => {
+      others.splice(self, 1)
+      others.forEach((other, index) => {
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
+        if (particle.constructor.name === "OutputParticle" && distance <= other.aura && index !== self) this.particles.splice(index, 1)
         other.distance = distance
-        let neighbor = {distance: other.distance, position: other.position, charge: other.charge, size: other.size}
+        let neighbor = { distance: other.distance, position: other.position, charge: other.charge, size: other.size }
         if (distance <= particle.aura) neighbors.push(neighbor)
       })
       particle.neighbors = neighbors
       particle.spin()
       this.constrain(particle.position, particle.size)
     })
-    
+
   }
 
 
@@ -107,7 +96,7 @@ class World {
     listen(msg => {
       // listen for world renderers
       if (msg === "WORLD") {
-        this.worlds.push("WORLD_"+this.worlds.length)
+        this.worlds.push("WORLD_" + this.worlds.length)
         send("WORLD", JSON.stringify({ start: this }))
       }
     })

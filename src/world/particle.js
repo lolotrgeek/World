@@ -83,4 +83,29 @@ class Particle {
     }
 }
 
-module.exports = { Particle }
+class InputParticle extends Particle {
+    constructor(charge, position) {
+        super(charge, position)
+        this.type ="input"
+        this.size = 10
+    }
+
+    spin() {
+        return 
+    }
+}
+
+class OutputParticle extends Particle {
+    constructor(charge, position) {
+        super(charge, position)
+        this.type ="output"
+        this.size = 10
+    }
+
+    spin() {
+        return
+    }
+}
+
+
+module.exports = { Particle, InputParticle, OutputParticle }
