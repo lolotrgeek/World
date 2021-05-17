@@ -1,7 +1,7 @@
 // The "Mind-Head"
 
 require('../utils/functions')
-const { listen, broadcast, send } = require('../utils/router')
+const { listen, send } = require('../utils/router')
 const { Particle } = require('./particle')
 const tag = "[World]"
 
@@ -10,6 +10,9 @@ class World {
     this.size = size // size (dimensions) of world
     this.energy = energy // number of particles
     this.particles = []
+    this.positive = energy / 3
+    this.negative = energy / 3
+    this.neutral = energy / 3
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
     this.count = 0
@@ -17,7 +20,19 @@ class World {
 
   populate() {
     while (this.particles.length < this.energy) {
-      let particle = new Particle()
+      let particle
+      if(this.positive > 0) {
+        particle = new Particle(1)
+        this.positive--
+      }
+      else if(this.negative > 0) {
+        particle = new Particle(-1)
+        this.negative--
+      }
+      else if(this.neutral > 0) {
+        particle = new Particle(0)
+        this.neutral--
+      }
       this.particles.push(particle)
     }
   }

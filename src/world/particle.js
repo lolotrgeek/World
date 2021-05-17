@@ -2,8 +2,8 @@
 // Locality and Physicality
 require('../utils/functions')
 class Particle {
-    constructor() {
-        this.charge = Array.choice([-1, 0, 1]) // randomly assign polarity -1 negative, 0 neutral, 1 positive
+    constructor(charge=Array.choice([-1, 0, 1])) {
+        this.charge = charge // default: randomly assign polarity -1 negative, 0 neutral, 1 positive
         // TODO: add polarized particles? (both positive and negative) 
         this.position = { x: randint(-500, 500), y: randint(-500, 500) }
         this.size = 5 // radius of the particle
@@ -33,16 +33,16 @@ class Particle {
     }
 
     moveTowards(other, velocity) {
-        let dX = other.position.x - this.position.x
-        let dY = other.position.y - this.position.y
+        let dX = other.position.x - (this.position.x - this.size)
+        let dY = other.position.y - (this.position.y - this.size)
 
         this.position.x += (dX / velocity)
         this.position.y += (dY / velocity)
     }
 
     moveAwayFrom(other, velocity) {
-        let dX = other.position.x - this.position.x
-        let dY = other.position.y - this.position.y
+        let dX = other.position.x - (this.position.x - this.size)
+        let dY = other.position.y - (this.position.y - this.size)
 
         this.position.x -= (dX / velocity)
         this.position.y -= (dY / velocity)
