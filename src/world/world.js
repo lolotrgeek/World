@@ -92,7 +92,7 @@ class World {
       others.forEach((other, i) => {
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
         other.distance = distance
-        let neighbor = {distance: other.distance, position: other.position, charge: other.charge}
+        let neighbor = {distance: other.distance, position: other.position, charge: other.charge, size: other.size}
         if (distance <= particle.aura) neighbors.push(neighbor)
       })
       particle.neighbors = neighbors
