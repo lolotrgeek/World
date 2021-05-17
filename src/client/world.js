@@ -1,8 +1,10 @@
 
 class World {
-  constructor(particles = [], size={ x: 500, y: 500 }) {
+  constructor(particles, size, input, output) {
     this.particles = particles
     this.size = size
+    this.input = input
+    this.output = output
     this.p = null
   }
 
@@ -32,6 +34,11 @@ class World {
     this.p.ellipse(particle.position.x, particle.position.y, particle.size, particle.size)
   }
 
+  displayIO(){
+    this.p.square(this.input.x, this.input.y, 10)
+    this.p.square(this.output.x, this.output.y, 10)
+  }
+
   nearby(particle) {
     if (particle.neighbors.length > 0) {
       particle.neighbors.forEach(neighbor => {
@@ -51,6 +58,7 @@ class World {
   }
 
   spin() {
+    this.displayIO()
     this.particles.forEach(particle => {
       particle.position = this.position(particle)
       this.display(particle)

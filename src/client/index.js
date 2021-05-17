@@ -1,5 +1,6 @@
 let world_div = document.getElementById("world")
-let count_div = document.getElementById("count")
+let step_div = document.getElementById("steps")
+let particle_count_div = document.getElementById("particles")
 
 let world
 
@@ -39,10 +40,7 @@ function subheading(value) {
     return element
 }
 
-
-
 listen(msg => {
-    clear(count_div)
     if (typeof msg === 'object') {
         if (typeof msg.start === 'object') {
             world = createworld(msg.start) // from sketch.js
@@ -55,9 +53,10 @@ listen(msg => {
             if (particles) {
                 // update
                 world.particles = particles
+                particle_count_div.innerText = `particles: ${particles.length}`
             }
             if(msg.world.count) {
-                count_div.appendChild(block(text(`step: ${msg.world.count}`)))
+                step_div.innerText = `step: ${msg.world.count}`
             }         
         }
         
@@ -65,6 +64,8 @@ listen(msg => {
     else if (msg === "CLOSED") {
         stopsketch(world) // from sketch.js
     }
+    // clear(step_div)
+    // clear(particle_count_div)
 })
 
 

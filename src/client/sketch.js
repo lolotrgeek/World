@@ -1,6 +1,6 @@
 
 function createworld(msg) {
-    let world = new World(msg.particles, msg.size)
+    let world = new World(msg.particles, msg.size, msg.input, msg.output)
     return world
 }
 

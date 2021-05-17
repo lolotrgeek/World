@@ -2,10 +2,10 @@
 // Locality and Physicality
 require('../utils/functions')
 class Particle {
-    constructor(charge=Array.choice([-1, 0, 1])) {
-        this.charge = charge // default: randomly assign polarity -1 negative, 0 neutral, 1 positive
+    constructor(charge, position) {
+        this.charge = charge
         // TODO: add polarized particles? (both positive and negative) 
-        this.position = { x: randint(-500, 500), y: randint(-500, 500) }
+        this.position = position
         this.size = 5 // radius of the particle
         this.aura = 50 // radius of the particle's charge
         this.neighbors = []
@@ -33,16 +33,16 @@ class Particle {
     }
 
     moveTowards(other, velocity) {
-        let dX = other.position.x - (this.position.x - this.size)
-        let dY = other.position.y - (this.position.y - this.size)
+        let dX = other.position.x - (this.position.x + this.size)
+        let dY = other.position.y - (this.position.y + this.size)
 
         this.position.x += (dX / velocity)
         this.position.y += (dY / velocity)
     }
 
     moveAwayFrom(other, velocity) {
-        let dX = other.position.x - (this.position.x - this.size)
-        let dY = other.position.y - (this.position.y - this.size)
+        let dX = other.position.x - (this.position.x + this.size)
+        let dY = other.position.y - (this.position.y + this.size)
 
         this.position.x -= (dX / velocity)
         this.position.y -= (dY / velocity)
@@ -51,12 +51,15 @@ class Particle {
     spin() {
         this.getAttractions()
         this.neighbors.forEach((neighbor, i) => {
+
             if (neighbor.attraction < 0) {
                 this.moveAwayFrom(neighbor, neighbor.distance)
             }
             if (neighbor.attraction > 0) {
                 this.moveTowards(neighbor, neighbor.distance)
             }
+
+
         })
     }
 }
