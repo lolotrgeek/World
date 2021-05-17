@@ -1,10 +1,8 @@
 
 class World {
-  constructor(particles, size, input, output) {
+  constructor(particles, size) {
     this.particles = particles
     this.size = size
-    this.input = input
-    this.output = output
     this.x_scalar = 1
     this.y_scalar = 1
     this.p = null
@@ -25,24 +23,26 @@ class World {
     this.p.pop()
   }
 
-  display(particle) {
-    this.p.ellipseMode(this.p.CENTER)
+  colorize(particle){
     let color
     if (particle.charge === -1) color = "#0004FF"
     else if (particle.charge === 0) color = "#000"
     else if (particle.charge === 1) color = "#FF0000"
     this.p.stroke(color)
     this.p.fill(color)
-    this.p.ellipse(particle.position.x, particle.position.y, particle.size, particle.size)
   }
 
-  displayInput(){
-    this.p.square(this.input.x, this.input.y, 10)
-  }
-
-  displayOutput(){
-    this.p.fill("#000")
-    this.p.square(this.output.x, this.output.y, 10)
+  display(particle) {
+    if(particle.type === "output" || particle.type === "input") {
+      this.p.rectMode(this.p.CENTER)
+      this.colorize(particle)
+      this.p.square(particle.position.x, particle.position.y, particle.size)
+    }
+    else {
+      this.p.ellipseMode(this.p.CENTER)
+      this.colorize(particle)
+      this.p.ellipse(particle.position.x, particle.position.y, particle.size, particle.size)
+    }
   }
 
   nearby(particle) {
@@ -64,12 +64,10 @@ class World {
   }
 
   spin() {
-    this.displayInput()
     this.particles.forEach(particle => {
       particle.position = this.position(particle)
       this.display(particle)
       // this.nearby(particle)
     })
-    this.displayOutput()
   }
 }
