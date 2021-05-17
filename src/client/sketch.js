@@ -1,16 +1,22 @@
 
 function createworld(msg) {
-    let world = new World(msg.particles, msg.size, msg.input, msg.output)
-    return world
+  let world = new World(msg.particles, msg.size, msg.input, msg.output)
+  return world
+}
+
+function scaleWorld(world) {
+  let div = document.getElementById("sketch")
+  let x = div.offsetWidth
+  let y = div.offsetHeight
+  world.x_scalar = x - world.size.x
+  world.y_scalar = y - world.size.y
 }
 
 function startsketch(world) {
   let sketch = function (p) {
     world.p = p
     p.setup = function () {
-      let div = document.getElementById("sketch")
       cnv = p.createCanvas(world.size.x, world.size.y)
-      // cnv = p.createCanvas(div.offsetWidth, div.offsetHeight)
       cnv.style('display', 'block')
       cnv.parent("sketch")
       // noLoop()

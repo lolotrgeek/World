@@ -5,6 +5,8 @@ class World {
     this.size = size
     this.input = input
     this.output = output
+    this.x_scalar = 1
+    this.y_scalar = 1
     this.p = null
   }
 
@@ -34,8 +36,12 @@ class World {
     this.p.ellipse(particle.position.x, particle.position.y, particle.size, particle.size)
   }
 
-  displayIO(){
+  displayInput(){
     this.p.square(this.input.x, this.input.y, 10)
+  }
+
+  displayOutput(){
+    this.p.fill("#000")
     this.p.square(this.output.x, this.output.y, 10)
   }
 
@@ -58,11 +64,12 @@ class World {
   }
 
   spin() {
-    this.displayIO()
+    this.displayInput()
     this.particles.forEach(particle => {
       particle.position = this.position(particle)
       this.display(particle)
       // this.nearby(particle)
     })
+    this.displayOutput()
   }
 }
