@@ -6,7 +6,7 @@ class Particle {
         this.charge = charge
         // TODO: add polarized particles? (both positive and negative) 
         this.position = position
-        this.size = 2 // radius of the particle
+        this.size = 3 // radius of the particle
         this.aura = 50 // radius of the particle's charge
         this.neighbors = []
     }
@@ -36,7 +36,7 @@ class Particle {
         return (Math.abs(coordinate) + size) * Math.sign(coordinate)
     }
 
-    sizePosition(){
+    sizePosition() {
         let sized_position = {}
         sized_position.x = this.sizeCoordinate(this.position.x, this.size)
         sized_position.y = this.sizeCoordinate(this.position.y, this.size)
@@ -59,19 +59,26 @@ class Particle {
         this.position.y -= (dY / velocity)
     }
 
+    noMove(){
+        this.position.x = this.position.x
+        this.position.y = this.position.y
+    }
+
     spin() {
         // this.sizePosition()
         this.getAttractions()
         this.neighbors.forEach((neighbor, i) => {
-
             if (neighbor.attraction < 0) {
                 this.moveAwayFrom(neighbor, neighbor.distance)
             }
             if (neighbor.attraction > 0) {
-                this.moveTowards(neighbor, neighbor.distance)
+                if (neighbor.distance < this.size + neighbor.size) {
+                    this.noMove()
+                } else {
+                    this.moveTowards(neighbor, neighbor.distance)
+
+                }
             }
-
-
         })
     }
 }

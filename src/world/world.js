@@ -70,10 +70,9 @@ class World {
 
   outputParticle(particle, index) {
     let distance = this.findDistance(this.output.x, this.output.y, particle.position.x, particle.position.y)
-    if(distance <= particle.size) {
+    if(distance <= particle.aura) {
       // TODO: has a charge that attracts, is set externally in order to build agency
       this.particles.splice(index,1)
-      console.log('Output: ', index)
     }
   }
 
