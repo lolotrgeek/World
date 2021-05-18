@@ -18,7 +18,7 @@ function run() {
     app.get("/sketch.js", (req, res) => res.sendFile(path.resolve(__dirname, "../client/sketch.js")))
     app.get("/world.js", (req, res) => res.sendFile(path.resolve(__dirname, "../client/world.js")))
     app.get("/reconnecting-websocket.js", (req, res) => res.sendFile(path.resolve(__dirname, "../../node_modules/reconnecting-websocket/dist/reconnecting-websocket-iife.js")))
-    app.listen(HTTP_PORT, () => log(`${tag} HTTP listening at ${HTTP_PORT}`))
+    app.listen(HTTP_PORT, () => log(`${tag} HTTP listening at http://localhost:${HTTP_PORT}`))
 }
 
 module.exports = { run }
