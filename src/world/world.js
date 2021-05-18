@@ -75,10 +75,11 @@ class World {
       }
       let neighbors = []
       let others = this.particles.map(particle => particle)
-      others.splice(self, 1)
       others.forEach((other, index) => {
+        if(index === self) return
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
-        if (particle.constructor.name === "OutputParticle" && distance <= other.aura && index !== self) this.particles.splice(index, 1)
+        // TEST: could be removing wrong index because of self splice...
+        if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particles.splice(index, 1)
         other.distance = distance
         let neighbor = { distance: other.distance, position: other.position, charge: other.charge, size: other.size }
         if (distance <= particle.aura) neighbors.push(neighbor)
