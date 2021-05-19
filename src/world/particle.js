@@ -1,13 +1,15 @@
 // The manifestation of Energy
 // Locality and Physicality
 require('../utils/functions')
+let { World } = require('./world')
+
 class Particle {
     constructor(charge, position) {
         this.charge = charge
         // TODO: add polarized particles? (both positive and negative) 
         this.position = position
-        this.size = 3 // radius of the particle
-        this.aura = 50 // radius of the particle's charge
+        this.size = 2 // radius of the particle
+        this.aura = 10 // radius of the particle's charge
         this.neighbors = []
     }
 
@@ -59,7 +61,7 @@ class Particle {
         this.position.y -= (dY / velocity)
     }
 
-    noMove(){
+    noMove() {
         this.position.x = this.position.x
         this.position.y = this.position.y
     }
@@ -86,19 +88,7 @@ class Particle {
 class InputParticle extends Particle {
     constructor(charge, position) {
         super(charge, position)
-        this.type ="input"
-        this.size = 10
-    }
-
-    spin() {
-        return 
-    }
-}
-
-class OutputParticle extends Particle {
-    constructor(charge, position) {
-        super(charge, position)
-        this.type ="output"
+        this.type = "input"
         this.size = 10
     }
 
@@ -107,5 +97,26 @@ class OutputParticle extends Particle {
     }
 }
 
+class OutputParticle extends Particle {
+    constructor(charge, position) {
+        super(charge, position)
+        this.type = "output"
+        this.size = 10
+    }
 
-module.exports = { Particle, InputParticle, OutputParticle }
+    spin() {
+        return
+    }
+}
+
+class WorldParticle extends Particle {
+    constructor(charge, position) {
+        super(charge, position)
+        this.type = "world"
+    }
+    // if it has input/output particles, then it has inputs and outputs
+
+    
+}
+
+module.exports = { Particle, InputParticle, OutputParticle, WorldParticle }

@@ -15,14 +15,19 @@ class World {
     this.neutral = energy / 3
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
-    this.count = 0
-    this.input = { x: this.size.x / 2, y: this.size.y / 2, charge: 1 } // middle
-    this.output = { x: this.size.x / 2, y: 0, charge: -1 } // bottom
+    this.count = {negative: 0, positive: 0, neutral: 0}
+    this.steps = 0
   }
 
   populate() {
-    this.particles.push(new InputParticle(this.input.charge, { x: this.input.x, y: this.input.y }))
-    this.particles.push(new OutputParticle(this.output.charge, { x: this.output.x, y: this.output.y }))
+
+    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x}))
+    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x}))
+
+    this.particles.push(new OutputParticle(1, { x: this.size.x, y: 0}))
+    this.particles.push(new OutputParticle(-1, { x: 0, y: 0}))
+
+
     while (this.particles.length < this.energy) {
       let particle
       let position = { x: randint(-this.size.x, this.size.x), y: randint(-this.size.y, this.size.y) }
@@ -58,18 +63,39 @@ class World {
 
   constrain(position, r) {
     // cause particles to stay within bounds of the envrironment
-    if (position.x < 0) position.x = 0
-    if (position.y < 0) position.y = 0
-    if (position.x > this.size.x) position.x = this.size.x
-    if (position.y > this.size.y) position.y = this.size.y
+    if (position.x < 0) position.x = 0 + r
+    if (position.y < 0) position.y = 0 + r
+    if (position.x > this.size.x) position.x = this.size.x - r
+    if (position.y > this.size.y) position.y = this.size.y - r
+  }
+
+  countCharge(particle){
+    if(particle.charge === -1)this.count.negative++
+    if(particle.charge === 1)this.count.positive++
+    if(particle.charge === 0)this.count.neutral++
+  }
+
+  produceNeutral(particle, other, distance) {
+    if (distance < particle.size + other.size) {
+      if(particle.charge === other.charge) {
+        other.charge = 0
+        particle.charge = 0
+      }
+    }    
+  }
+  particleGenerator(){
+    return randint(-10, 2)
+  }
+
+  particleDestroyer(index){
+    this.particles.splice(index, 1)
   }
 
   step() {
     this.particles.forEach((particle, self) => {
       if (particle.constructor.name === "InputParticle") {
-        let trial = randint(-10, 2)
-        if (trial > 0) {
-          let incoming_particle = new Particle(Array.choice([-1, 0, 1]), {x: this.input.x + 10, y: this.input.y + 10})
+        if (this.particleGenerator() > 0) {
+          let incoming_particle = new Particle(particle.charge, {x: particle.position.x + particle.size, y: particle.position.y + particle.size})
           this.particles.push(incoming_particle)
         }
       }
@@ -78,8 +104,7 @@ class World {
       others.forEach((other, index) => {
         if(index === self) return
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
-        // TEST: could be removing wrong index because of self splice...
-        if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particles.splice(index, 1)
+        if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particleDestroyer(index)
         other.distance = distance
         let neighbor = { distance: other.distance, position: other.position, charge: other.charge, size: other.size }
         if (distance <= particle.aura) neighbors.push(neighbor)
@@ -87,6 +112,7 @@ class World {
       particle.neighbors = neighbors
       particle.spin()
       this.constrain(particle.position, particle.size)
+      // this.countCharge(particle)
     })
 
   }
@@ -108,7 +134,7 @@ class World {
     setInterval(() => {
       this.step()
       if (this.worlds.length > 0) send("WORLD", JSON.stringify({ world: this }))
-      this.count++
+      this.steps++
     }, this.speed)
   }
 }
