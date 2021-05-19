@@ -1,6 +1,9 @@
 let world_div = document.getElementById("world")
 let step_div = document.getElementById("steps")
-let particle_count_div = document.getElementById("particles")
+let total_div = document.getElementById("total")
+let negative_div = document.getElementById("negative")
+let positive_div = document.getElementById("positive")
+let neutral_div = document.getElementById("neutral")
 
 let world
 
@@ -53,13 +56,18 @@ listen(msg => {
             if (particles) {
                 // update
                 world.particles = particles
-                particle_count_div.innerText = `particles: ${particles.length}`
+                total_div.innerText = `particles: ${particles.length}`
             }
-            if(msg.world.count) {
-                step_div.innerText = `step: ${msg.world.count}`
-            }         
+            // if (msg.world.count) {
+            //     negative_div.innerText = `negative: ${msg.world.count.negative}`
+            //     positive_div.innerText = `positive: ${msg.world.count.positive}`
+            //     neutral_div.innerText = `neutral: ${msg.world.count.neutral}`
+            // }
+            if (msg.world.steps) {
+                step_div.innerText = `step: ${msg.world.steps}`
+            }
         }
-        
+
     }
     else if (msg === "CLOSED") {
         stopsketch(world) // from sketch.js

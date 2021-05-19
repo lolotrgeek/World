@@ -26,18 +26,18 @@ class World {
   colorize(particle){
     let color
     if (particle.charge === -1) color = "#0004FF"
-    else if (particle.charge === 0) color = "#000"
+    else if (particle.charge === 0) color = "#FFF"
     else if (particle.charge === 1) color = "#FF0000"
     this.p.stroke(color)
     this.p.fill(color)
   }
 
   display(particle) {
-    if(particle.type === "output" || particle.type === "input") {
+    if(particle.type === "output") {      
       this.p.rectMode(this.p.CENTER)
       this.colorize(particle)
       this.p.square(particle.position.x, particle.position.y, particle.size)
-    }
+    }    
     else {
       this.p.ellipseMode(this.p.CENTER)
       this.colorize(particle)
