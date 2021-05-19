@@ -16,14 +16,14 @@ function startsketch(world) {
   let sketch = function (p) {
     world.p = p
     p.setup = function () {
-      cnv = p.createCanvas(world.size.x, world.size.y)
+      cnv = p.createCanvas(div.offsetWidth, div.offsetHeight)
       cnv.style('display', 'block')
       cnv.parent("sketch")
       // noLoop()
     }
 
     p.draw = function () {
-      p.background(175)
+      p.background(000)
       world.spin()
       // console.log(world.bloops)
       // ws.send(JSON.stringify(world.bloops))
