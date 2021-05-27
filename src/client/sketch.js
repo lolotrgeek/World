@@ -1,13 +1,14 @@
 
+  let div = document.getElementById("sketch")
+  let x = div.offsetWidth
+  let y = div.offsetHeight
+
 function createworld(msg) {
   let world = new World(msg.particles, msg.size)
   return world
 }
 
 function scaleWorld(world) {
-  let div = document.getElementById("sketch")
-  let x = div.offsetWidth
-  let y = div.offsetHeight
   world.x_scalar = x - world.size.x
   world.y_scalar = y - world.size.y
 }
