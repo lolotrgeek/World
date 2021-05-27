@@ -2,7 +2,10 @@
 
 require('../utils/functions')
 const { listen, send } = require('../utils/router')
-const { Particle, InputParticle, OutputParticle } = require('./particle')
+const { Particle } = require('./particles/Particle')
+const { InputParticle } = require('./particles/InputParticle')
+const { OutputParticle } = require('./particles/OutputParticle')
+const { WorldParticle } = require('./particles/WorldParticle')
 const tag = "[World]"
 
 class World {
@@ -15,17 +18,17 @@ class World {
     this.neutral = energy / 3
     this.worlds = [] // list of connected "world" clients
     this.speed = 100 // ms
-    this.count = {negative: 0, positive: 0, neutral: 0}
+    this.count = { negative: 0, positive: 0, neutral: 0 }
     this.steps = 0
   }
 
   populate() {
 
-    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x}))
-    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x}))
+    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x }))
+    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x }))
 
-    this.particles.push(new OutputParticle(1, { x: this.size.x, y: 0}))
-    this.particles.push(new OutputParticle(-1, { x: 0, y: 0}))
+    this.particles.push(new OutputParticle(1, { x: this.size.x, y: 0 }))
+    this.particles.push(new OutputParticle(-1, { x: 0, y: 0 }))
 
 
     while (this.particles.length < this.energy) {
@@ -69,25 +72,25 @@ class World {
     if (position.y > this.size.y) position.y = this.size.y - r
   }
 
-  countCharge(particle){
-    if(particle.charge === -1)this.count.negative++
-    if(particle.charge === 1)this.count.positive++
-    if(particle.charge === 0)this.count.neutral++
+  countCharge(particle) {
+    if (particle.charge === -1) this.count.negative++
+    if (particle.charge === 1) this.count.positive++
+    if (particle.charge === 0) this.count.neutral++
   }
 
   produceNeutral(particle, other, distance) {
     if (distance < particle.size + other.size) {
-      if(particle.charge === other.charge) {
+      if (particle.charge === other.charge) {
         other.charge = 0
         particle.charge = 0
       }
-    }    
+    }
   }
-  particleGenerator(){
+  particleGenerator() {
     return randint(-10, 2)
   }
 
-  particleDestroyer(index){
+  particleDestroyer(index) {
     this.particles.splice(index, 1)
   }
 
@@ -95,14 +98,14 @@ class World {
     this.particles.forEach((particle, self) => {
       if (particle.constructor.name === "InputParticle") {
         if (this.particleGenerator() > 0) {
-          let incoming_particle = new Particle(particle.charge, {x: particle.position.x + particle.size, y: particle.position.y + particle.size})
+          let incoming_particle = new Particle(particle.charge, { x: particle.position.x + particle.size, y: particle.position.y + particle.size })
           this.particles.push(incoming_particle)
         }
       }
       let neighbors = []
       let others = this.particles.map(particle => particle)
       others.forEach((other, index) => {
-        if(index === self) return
+        if (index === self) return
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
         if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particleDestroyer(index)
         other.distance = distance

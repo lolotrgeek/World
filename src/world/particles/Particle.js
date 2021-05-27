@@ -1,7 +1,6 @@
 // The manifestation of Energy
 // Locality and Physicality
-require('../utils/functions')
-let { World } = require('./world')
+require('../../utils/functions')
 
 class Particle {
     constructor(charge, position) {
@@ -109,14 +108,5 @@ class OutputParticle extends Particle {
     }
 }
 
-class WorldParticle extends Particle {
-    constructor(charge, position) {
-        super(charge, position)
-        this.type = "world"
-    }
-    // if it has input/output particles, then it has inputs and outputs
 
-    
-}
-
-module.exports = { Particle, InputParticle, OutputParticle, WorldParticle }
+module.exports = { Particle, InputParticle, OutputParticle }
