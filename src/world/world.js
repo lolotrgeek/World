@@ -1,4 +1,5 @@
 // The "Mind-Head"
+// Sets the environment (rules) for particles to interact within.
 
 require('../utils/functions')
 const { listen, send } = require('../utils/router')
@@ -24,11 +25,11 @@ class World {
 
   populate() {
 
-    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x }))
-    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x }))
+    this.particles.push(new InputParticle(0, { x: this.size.x, y: this.size.x }))
+    this.particles.push(new InputParticle(0, { x: 0, y: this.size.x }))
 
-    this.particles.push(new OutputParticle(1, { x: this.size.x, y: 0 }))
-    this.particles.push(new OutputParticle(-1, { x: 0, y: 0 }))
+    this.particles.push(new OutputParticle(0, { x: this.size.x, y: 0 }))
+    this.particles.push(new OutputParticle(0, { x: 0, y: 0 }))
 
 
     while (this.particles.length < this.energy) {
