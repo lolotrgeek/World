@@ -7,3 +7,4 @@ Wave model, see if creatures emerge and learn to survive.
 
 Directing the flow of energy in order to produce an output.
 
+Emergent computation/intelligence.

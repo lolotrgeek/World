@@ -6,13 +6,13 @@ const { listen, send } = require('../utils/router')
 const { Particle } = require('./particles/Particle')
 const { InputParticle } = require('./particles/InputParticle')
 const { OutputParticle } = require('./particles/OutputParticle')
-const { WorldParticle } = require('./particles/WorldParticle')
 const tag = "[World]"
 
 class World {
-  constructor(size, energy = 4) {
+  constructor(size, energy = 4, mind = null) {
     this.size = size // size (dimensions) of world
     this.energy = energy // number of particles
+    this.mind = mind
     this.particles = []
     this.positive = energy / 3
     this.negative = energy / 3
@@ -25,12 +25,14 @@ class World {
 
   populate() {
 
-    this.particles.push(new InputParticle(0, { x: this.size.x, y: this.size.x }))
-    this.particles.push(new InputParticle(0, { x: 0, y: this.size.x }))
+    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x }))
+    this.particles.push(new InputParticle(0, { x: 0, y: this.size.x / 2 }))
+    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x }))
 
     this.particles.push(new OutputParticle(0, { x: this.size.x, y: 0 }))
     this.particles.push(new OutputParticle(0, { x: 0, y: 0 }))
 
+    // TODO: get mind boundary, generate neutral particles for boundary, and corresponding particles for inputs/outputs
 
     while (this.particles.length < this.energy) {
       let particle
@@ -87,31 +89,57 @@ class World {
       }
     }
   }
-  particleGenerator() {
-    return randint(-10, 2)
+  /**
+   * Convert InputParticle to Generator
+   * @param {*} particle 
+   */
+  particleGenerator(particle) {
+    if (particle.constructor.name === "InputParticle") {
+      if (this.particles.length < this.energy) {
+        let incoming_particle = new Particle(particle.charge, { x: particle.position.x + particle.size, y: particle.position.y + particle.size })
+        this.particles.push(incoming_particle)
+      }
+    }
   }
 
-  particleDestroyer(index) {
-    this.particles.splice(index, 1)
+  /**
+   * Convert OutputParticle to Destroyer
+   * @param {*} particle 
+   * @param {*} other 
+   * @param {*} index 
+   * @param {*} distance 
+   */
+  particleDestroyer(particle, other, index, distance) {
+    if (particle.constructor.name === "OutputParticle" && distance <= other.aura) {
+      this.particles.splice(index, 1)
+    }
+  }
+
+  mindBoundary(mind) {
+    let half_x = mind.size.x / 2
+    let half_y = mind.size.y / 2
+    let top_right = { x: mind.size.x + half_x, y: mind.size.y + half_y }
+    let top_left = { x: mind.size.x + half_x, y: mind.size.y - half_y }
+    let bottom_left = { x: mind.size.x - half_x, y: mind.size.y - half_y }
+    let bottom_right = { x: mind.size.x - half_x, y: mind.size.y + half_y }
+    return { top_right, top_left, bottom_left, bottom_right }
   }
 
   step() {
+    if (this.mind) {
+      // if particle touches mind input, remove from this.particles, add to world.particles
+    }
     this.particles.forEach((particle, self) => {
-      if (particle.constructor.name === "InputParticle") {
-        if (this.particleGenerator() > 0) {
-          let incoming_particle = new Particle(particle.charge, { x: particle.position.x + particle.size, y: particle.position.y + particle.size })
-          this.particles.push(incoming_particle)
-        }
-      }
+      this.particleGenerator(particle)
       let neighbors = []
       let others = this.particles.map(particle => particle)
       others.forEach((other, index) => {
         if (index === self) return
         let distance = this.findDistance(particle.position.x, particle.position.y, other.position.x, other.position.y)
-        if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particleDestroyer(index)
         other.distance = distance
         let neighbor = { distance: other.distance, position: other.position, charge: other.charge, size: other.size }
         if (distance <= particle.aura) neighbors.push(neighbor)
+        this.particleDestroyer(particle, other, index, distance)
       })
       particle.neighbors = neighbors
       particle.spin()
@@ -123,7 +151,6 @@ class World {
 
 
   reset() {
-    this.populate()
     listen(msg => {
       // listen for world renderers
       if (msg === "WORLD") {
@@ -134,7 +161,6 @@ class World {
   }
 
   spin() {
-    this.reset()
     setInterval(() => {
       this.step()
       if (this.worlds.length > 0) send("WORLD", JSON.stringify({ world: this }))
@@ -142,7 +168,5 @@ class World {
     }, this.speed)
   }
 }
-
-
 
 module.exports = { World }
