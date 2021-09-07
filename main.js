@@ -16,7 +16,7 @@ let world = new World(size.world, energy, mind)
 
 
 run()
-
+mind.reset()
 world.reset()
 world.populate()
 world.spin()

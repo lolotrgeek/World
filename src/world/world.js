@@ -24,15 +24,18 @@ class World {
   }
 
   populate() {
+    this.mind.populate()
 
-    this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x }))
-    this.particles.push(new InputParticle(0, { x: 0, y: this.size.x / 2 }))
-    this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x }))
+    // this.particles.push(new InputParticle(1, { x: this.size.x, y: this.size.x }))
+    // this.particles.push(new InputParticle(0, { x: 0, y: this.size.x / 2 }))
+    // this.particles.push(new InputParticle(-1, { x: 0, y: this.size.x }))
 
-    this.particles.push(new OutputParticle(0, { x: this.size.x, y: 0 }))
-    this.particles.push(new OutputParticle(0, { x: 0, y: 0 }))
+    // this.particles.push(new OutputParticle(0, { x: this.size.x, y: 0 }))
+    // this.particles.push(new OutputParticle(0, { x: 0, y: 0 }))
 
     // TODO: get mind boundary, generate neutral particles for boundary, and corresponding particles for inputs/outputs
+    let center = { x: this.size.x / 2, y: this.size.y / 2 }
+    this.mind.position = this.boundary(this.mind, center)
 
     while (this.particles.length < this.energy) {
       let particle
@@ -51,6 +54,16 @@ class World {
       }
       this.particles.push(particle)
     }
+  }
+
+  boundary(entity, reference) {
+    let half_x = entity.size.x / 2
+    let half_y = entity.size.y / 2
+    let top_right = { x: reference.x + half_x, y: reference.y + half_y }
+    let top_left = { x: reference.x + half_x, y: reference.y - half_y }
+    let bottom_left = { x: reference.x - half_x, y: reference.y - half_y }
+    let bottom_right = { x: reference.x - half_x, y: reference.y + half_y }
+    return { top_right, top_left, bottom_left, bottom_right }
   }
 
   findDistance(x1, y1, x2, y2) {
@@ -115,19 +128,11 @@ class World {
     }
   }
 
-  mindBoundary(mind) {
-    let half_x = mind.size.x / 2
-    let half_y = mind.size.y / 2
-    let top_right = { x: mind.size.x + half_x, y: mind.size.y + half_y }
-    let top_left = { x: mind.size.x + half_x, y: mind.size.y - half_y }
-    let bottom_left = { x: mind.size.x - half_x, y: mind.size.y - half_y }
-    let bottom_right = { x: mind.size.x - half_x, y: mind.size.y + half_y }
-    return { top_right, top_left, bottom_left, bottom_right }
-  }
 
   step() {
     if (this.mind) {
       // if particle touches mind input, remove from this.particles, add to world.particles
+
     }
     this.particles.forEach((particle, self) => {
       this.particleGenerator(particle)

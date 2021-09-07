@@ -11,6 +11,8 @@ const tag = "[World]"
 class Mind {
   constructor(size) {
     this.size = size // size (dimensions) of mind
+    this.position = {}
+    this.bounds = this.boundary()
     this.particles = []
     this.count = { negative: 0, positive: 0, neutral: 0 }
     this.steps = 0
@@ -25,6 +27,16 @@ class Mind {
     this.particles.push(new OutputParticle(0, { x: 0, y: 0 }))
   }
 
+  boundary() {
+    let half_x = this.size.x / 2
+    let half_y = this.size.y / 2
+    let top_right = { x: this.size.x + half_x, y: this.size.y + half_y }
+    let top_left = { x: this.size.x + half_x, y: this.size.y - half_y }
+    let bottom_left = { x: this.size.x - half_x, y: this.size.y - half_y }
+    let bottom_right = { x: this.size.x - half_x, y: this.size.y + half_y }
+    return { top_right, top_left, bottom_left, bottom_right }
+  }
+
   findDistance(x1, y1, x2, y2) {
     let a = x1 - x2
     let b = y1 - y2
@@ -32,7 +44,7 @@ class Mind {
   }
 
   constrain(position, r) {
-    // cause particles to stay within bounds of the envrironment
+    // cause particles to stay within bounds of the mind
     if (position.x < 0) position.x = 0 + r
     if (position.y < 0) position.y = 0 + r
     if (position.x > this.size.x) position.x = this.size.x - r
@@ -47,6 +59,7 @@ class Mind {
 
   particleOutlet(particle, other, index, distance) {
     if (particle.constructor.name === "OutputParticle" && distance <= other.aura) this.particles.splice(index, 1)
+    // return particle location
   }
 
   step() {
@@ -71,13 +84,7 @@ class Mind {
 
 
   reset() {
-    listen(msg => {
-      // listen for world renderers
-      if (msg === "WORLD") {
-        this.worlds.push("WORLD_" + this.worlds.length)
-        send("WORLD", JSON.stringify({ start: this }))
-      }
-    })
+    
   }
 
   spin() {
