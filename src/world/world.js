@@ -8,7 +8,7 @@ const { listen, broadcast, send } = require('../server')
 const tag = "[World]"
 
 class World {
-  constructor(energy = 1000, odds = 0.005, size = { x: 500, y: 500 }) {
+  constructor(energy = 1000, odds = 0.005, size = { x: 500, y: 500 }, population=100 ) {
     // General Params
     this.speed = 100
     this.size = size
@@ -30,7 +30,7 @@ class World {
 
     // Creature Params
     this.bloops = {}
-    this.initial_population = 7
+    this.initial_population = population
     this.generation = 0 // only tracks generation of creatures spawned by world
     this.modules = [new Module(), new Select, new Look(), new Move(), new Eat()]
     this.mutation = .02

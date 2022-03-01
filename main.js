@@ -5,10 +5,11 @@ const { run } = require('./server')
 LOGGING = 'debug'
 
 
-let energy = 1000
+let energy = 10000
 let odds = 0.005
 let size = { x: 500, y: 500 }
-let world = new World(energy, odds, size)
+let population = 100
+let world = new World(energy, odds, size, population)
 
 run()
 // log(world.ports)
