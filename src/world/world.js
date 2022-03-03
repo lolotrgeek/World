@@ -9,7 +9,7 @@ const { OutputParticle } = require('./particles/OutputParticle')
 const tag = "[World]"
 
 class World {
-  constructor(size, energy = 4, mind = null) {
+  constructor(size, energy = 4, mind = null, speed = 100) {
     this.size = size // size (dimensions) of world
     this.energy = energy // number of particles
     this.mind = mind
@@ -18,7 +18,7 @@ class World {
     this.negative = energy / 3
     this.neutral = energy / 3
     this.worlds = [] // list of connected "world" clients
-    this.speed = 100 // ms
+    this.speed = speed // ms
     this.count = { negative: 0, positive: 0, neutral: 0 }
     this.steps = 0
   }
